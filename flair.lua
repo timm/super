@@ -39,14 +39,14 @@ Cols,Num,Sym = {},{},{}
 
 function Sym.new() return {} end
 function Num.new() return {n=0, mu=0, m2=0} end
-function Col(s)    return (s:find"^%u" and Num or Sym).new() end
-function Tbl(src)  return adds(src, {rows={}, cols=nil}) end
+function Col.new(s) return (s:find"^%u" and Num or Sym).new() end
+function Tbl.new(src) return adds(src, {rows={}, cols=nil}) end
 
 function Cols.new(names,     i,__roles)
   i = {names=names, all={}, x={}, y={}, klass=nil}
   for at,name in ipairs(names) do
-    i.all[at] = Col(name)
-    Cols.roles(i, name:sub(-1), at) end
+    i.all[at] = Col.new(name)
+    Cols.roles(name:sub(-1), at) end
   return i end
 
 function Cols.roles(i,z,at)
