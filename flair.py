@@ -8,14 +8,19 @@ Options:
   --few=256      sub-sample size for pole finding
   --stop=20      stopping rule for recursive tree generation
   --bins=16      number of bins for discretization
+  --lots=2048    max rows used to build any tree
   --budget=40    total labelling budget for optimizing
   --check=5      optimization: how many top picks to label
   --seed=1234    random number generation
   --file=/Users/timm/gits/moot/optimize/misc/auto93.csv
 """
-import re, os, sys, glob, traceback; sys.dont_write_bytecode = True
+import re, os, sys, glob, traceback
+sys.dont_write_bytecode = True
 from math import exp, log
-from random import seed, choice, shuffle
+from random import seed, choice
+from random import shuffle as shuffle_
+
+def shuffle(t): shuffle_(t); return t # fluent shuffle
 from types import SimpleNamespace as o
 
 BIG = 1e30
@@ -26,7 +31,8 @@ def atom(s): # string --> number or stripped string
     try: return float(s)
     except ValueError: return s.strip()
 
-the = o(**{k: atom(v)
+class The(dict): __getattr__ = dict.get # the.k == the[k]
+the = The({k: atom(v)
            for k, v in re.findall(r"(\w+)=(\S+)", __doc__)})
 
 def csv(file): # iterate a csv file's atom rows
@@ -39,7 +45,8 @@ def csv(file): # iterate a csv file's atom rows
 def Num(): return o(n=0, mu=0, m2=0)
 def Sym(): return {}
 def Col(s): return Num() if s[0].isupper() else Sym()
-def Tbl(src): return adds(src, o(rows=[], cols=None))
+def Tbl(src):
+  return adds(src, o(rows=[], cols=None, center=None))
 
 def clone(tbl,rows=[]): # make new  with same structure as tbl
   return Tbl( [tbl.cols.names]+rows )
@@ -65,6 +72,7 @@ def add(i, v, w=1): # add value (or row) v, weight w
   if   type(i) is dict: i[v] = w + i.get(v, 0)
   elif hasattr(i, "mu"): welford(i, v, w)
   elif hasattr(i, "rows"):
+    i.center = None
     if i.cols: i.rows += [v]; add(i.cols, v, w)
     else: i.cols = Cols(v)
   elif hasattr(i, "x"):
@@ -80,9 +88,11 @@ def welford(i, v, w): # update a Num in place
     i.m2 += w*d*(v - i.mu)
 
 def mid(c): # middle: mode (Sym), mu (Num), mids (Tbl)
-  if type(c) is dict: return max(c, key=c.get)
-  if hasattr(c, "mu"): return c.mu
-  return [mid(col) for col in c.cols.all]
+  return max(c, key=c.get) if type(c)==dict else c.mu
+
+def mids(tbl): # JIT center; add() invalidates the cache
+  tbl.center = tbl.center or [mid(c) for c in tbl.cols.all]
+  return tbl.center
 
 def div(c): # diversity: ent (Sym) or sd (Num)
   return ent(c) if type(c) is dict else sd(c)
@@ -94,10 +104,15 @@ def ent(d): # diversity of a Sym
   n = sum(d.values())
   return -sum(v/n*log(v/n, 2) for v in d.values() if v > 0)
 
-def norm(c, v): # value --> 0..1, logistic cdf
+def norm(c, v): # value --> 0..1, logistic cdf, memoized
   if v == "?": return v
+  try: return c.memo[v]
+  except AttributeError: c.memo = {}
+  except KeyError: pass
   z = (v - c.mu)/(sd(c) + 1/BIG)
-  return 1/(1 + exp(-1.7*max(-3, min(3, z))))
+  out = 1/(1 + exp(-1.7*max(-3, min(3, z))))
+  c.memo[v] = out
+  return out
 
 def disty(t, row): # d2h: distance of goals to best corner
   d, n = 0, 1/BIG
@@ -135,73 +150,72 @@ def poles(t, rows): # fastmap projector along 2 far poles
   c = distx(t, a, b) + 1/BIG
   return lambda r:(distx(t,a,r)**2 + c*c - distx(t,b,r)**2)/(2*c)
 
-def bin(c, v): # top-level col c, value v --> bin id
+def bin(c, v): # top-level col c, value v --> bin 0..bins-1
   if v == "?" or type(c) is dict: return v
-  return min(the.bins, 1 + int(norm(c, v)*the.bins))
+  return int(norm(c, v)*the.bins)
 
-def binned(t, row, d, lo): # count row's bins into d
+def binned(t, row, d, ends): # count row's bins into d
   for at in t.cols.x:
     v = bin(t.cols.all[at], row[at])
     if v != "?":
       d[at][v] = 1 + d[at].get(v, 0)
       if type(t.cols.all[at]) is not dict:
-        lo[at][v] = min(row[at], lo[at].get(v, row[at]))
+        x = row[at]
+        lo, hi = ends[at].get(v, (x, x))
+        ends[at][v] = (min(lo, x), max(hi, x))
 
 def halves(t, rows): # median-split rows; bin as we go
   cl = {at: {} for at in t.cols.x}
   cr = {at: {} for at in t.cols.x}
-  lo = {at: {} for at in t.cols.x} # min seen per num bin
+  ends = {at: {} for at in t.cols.x} # (lo,hi) per num bin
   nl = nr = 0
   for j, row in enumerate(sorted(rows, key=poles(t, rows))):
     if j < len(rows)//2: d, nl = cl, nl + 1
     else:                d, nr = cr, nr + 1
-    binned(t, row, d, lo)
-  return cl, cr, nl, nr, lo
+    binned(t, row, d, ends)
+  return cl, cr, nl, nr, ends
 
 # ---------------------------------------------------------------
-def span(name, at, op, v, b, r): # scored, self-labeling
-  s = v if type(v) is str else "%.3g" % v
-  return o(name=name, at=at, op=op, v=v,
-           txt=f"{name} {op} {s}",
+def span(name, at, lo, hi, b, r): # scored, self-labeling
+  g = lambda x: x if type(x) is str else "%.3g" % x
+  if   lo == hi:   a, z = f"== {g(lo)}",  f"!= {g(lo)}"
+  elif lo == -BIG: a, z = f"<= {g(hi)}",  f"> {g(hi)}"
+  elif hi ==  BIG: a, z = f">= {g(lo)}",  f"< {g(lo)}"
+  else: a,z = f"in {g(lo)}..{g(hi)}",f"out {g(lo)}..{g(hi)}"
+  return o(name=name, at=at, lo=lo, hi=hi,
+           txt=f"{name} {a}", anti=f"{name} {z}",
            score=max(b, r)**2/(b + r + 1/BIG))
 
-def flip(z): # the negated span: same score, opposite test
-  op = {"<": ">=", ">=": "<", "==": "!=", "!=": "=="}[z.op]
-  return span(z.name, z.at, op, z.v, z.score, 0)
-
 def spans(t, rows): # yield the spans of rows' two halves
-  cl, cr, nl, nr, lo = halves(t, rows)
+  cl, cr, nl, nr, ends = halves(t, rows)
   def syms(at, dl, dr): # one span per symbol
     for k in dl.keys() | dr.keys():
-      yield span(t.cols.names[at], at, "==", k,
+      yield span(t.cols.names[at], at, k, k,
                  dl.get(k, 0)/nl, dr.get(k, 0)/nr)
-  def cuts(at, dl, dr, lo1): # cut sweeps the bin boundaries
+  def cuts(at, dl, dr, ends1): # sweep the bin boundaries
     B = R = 0
-    for j in range(1, the.bins):
+    for j in range(the.bins - 1):
       B += dl.get(j, 0)/nl
       R += dr.get(j, 0)/nr
-      if j + 1 in lo1: # cut at a value seen in the data
-        yield span(t.cols.names[at], at, "<",
-                   lo1[j+1], B, R)
-        yield span(t.cols.names[at], at, ">=",
-                   lo1[j+1], 1 - B, 1 - R)
+      if j in ends1 and j + 1 in ends1: # natural bounds
+        yield span(t.cols.names[at], at,
+                   -BIG, ends1[j][1], B, R)
+        yield span(t.cols.names[at], at,
+                   ends1[j+1][0], BIG, 1-B, 1-R)
   for at in t.cols.x:
     if type(t.cols.all[at]) is dict:
       yield from syms(at, cl[at], cr[at])
     else:
-      yield from cuts(at, cl[at], cr[at], lo[at])
+      yield from cuts(at, cl[at], cr[at], ends[at])
 
 def contrasts(t, rows): # best span over all x columns
-  return max(spans(t, rows),
-             key=lambda z: z.score, default=None)
+  return max(spans(t,rows), key=lambda z: z.score,
+             default=None)
 
 # ---------------------------------------------------------------
-def selects(z, row): # does row satisfy span z?
+def selects(z, row): # does row fall inside span z?
   v = row[z.at]
-  return v != "?" and (v == z.v if z.op == "==" else
-                       v != z.v if z.op == "!=" else
-                       v <  z.v if z.op == "<"  else
-                       v >= z.v)
+  return v != "?" and z.lo <= v <= z.hi
 
 def tree(t, cap=BIG): # grow subtrees, at most cap leaves
   n = [1]
@@ -227,35 +241,21 @@ def leaf(node, row): # walk row down to its leaf
     node = node.yes if selects(node.cut, row) else node.no
   return node
 
-def guess(t, node, row, k): # cached leaf d2h estimate
+def guess(t, node, row): # d2h of leaf row nearest to mids
   l = leaf(node, row)
   if not hasattr(l, "est"):
-    c = centroid(t, l.rows)
-    ds = [disty(t, r) for r in
-          sorted(l.rows, key=lambda r: distx(t, r, c))[:9]]
-    l.est = {j: sum(ds[:j])/len(ds[:j]) for j in (1, 5, 9)}
-  return l.est[k]
-
-def centroid(t, rows): # synthetic row: mid of each x column
-  row = ["?"]*len(t.cols.names)
-  for at in t.cols.x:
-    c = Col(t.cols.names[at])
-    for r in rows: add(c, r[at])
-    row[at] = mid(c)
-  return row
-
-def predict(t, node, row, k): # mean d2h of k rows near mid
-  rows = leaf(node, row).rows
-  c = centroid(t, rows)
-  near = sorted(rows, key=lambda r: distx(t, r, c))[:k]
-  return sum(disty(t, r) for r in near)/len(near)
+    l.tbl = clone(t, l.rows)
+    c = mids(l.tbl)
+    few = some(l.rows, min(len(l.rows), the.few))
+    l.est=disty(t, min(few, key=lambda r: distx(t,r,c)))
+  return l.est
 
 def show(node, pre=None, txt=""): # print tree; n at left
   print(f"{node.n:5} {pre or ''}{txt}")
   if node.cut:
     sub = "" if pre is None else pre + "|  "
     show(node.yes, sub, node.cut.txt)
-    show(node.no,  sub, flip(node.cut).txt)
+    show(node.no,  sub, node.cut.anti)
 
 # ---------------------------------------------------------------
 def test_the():
@@ -281,18 +281,18 @@ def test_contrasts():
   assert z and z.score > 0.5
   print(z.txt, "score %.2f" % z.score)
 
+def errs(t, tr, tt, rows): # prediction errors, one holdout
+  return ((abs(guess(tr, tt, r) - disty(tr, r))
+           for r in rows))
+
 def test_predict():
   "20 runs: mu, sd of |predicted - actual| d2h"
-  names, *rows = list(csv(the.file))
-  err = Num()
+  t, err = Tbl(csv(the.file)), Num()
   for _ in range(20):
-    shuffle(rows)
+    rows = shuffle(t.rows[:])
     n = len(rows)*2//3
-    tr = Tbl([names] + rows[:n])
-    tt = tree(tr)
-    for row in rows[n:]:
-      add(err, abs(predict(tr, tt, row, 1)
-                   - disty(tr, row)))
+    tr = clone(t, rows[:n])
+    adds(errs(t, tr, tree(tr), rows[n:]), err)
   print("err mu %.3f sd %.3f" % (err.mu, sd(err)))
 
 def test_err():
@@ -301,55 +301,47 @@ def test_err():
          "/Users/timm/gits/moot/optimize/**/*.csv",
          recursive=True), key=os.path.getsize)[:20]
   for f in fs:
-    names, *rows = list(csv(f))
-    errs = {k: Num() for k in (1, 3, 5, 7, 9)}
-    nleaf = Num()
+    t = Tbl(csv(f))
+    err, nleaf = Num(), Num()
     for _ in range(20):
-      shuffle(rows)
+      rows = shuffle(t.rows[:])
       n = len(rows)*2//3
-      tr = Tbl([names] + rows[:n])
+      tr = clone(t, rows[:n])
       tt = tree(tr)
       add(nleaf, leaves(tt))
-      for row in rows[n:]:
-        l = leaf(tt, row).rows
-        c = centroid(tr, l)
-        ds = [disty(tr, r) for r in
-              sorted(l, key=lambda r: distx(tr, r, c))[:9]]
-        want = disty(tr, row)
-        for k in errs:
-          got = ds[:k] or ds
-          add(errs[k], abs(sum(got)/len(got) - want))
-    print("%-22s %5s %4.0f " %
-          (f.split("/")[-1][:22], len(rows), nleaf.mu)
-          + " ".join("k%s %2.0f (%2.0f)" %
-                     (k, 100*errs[k].mu, 100*sd(errs[k]))
-                     for k in errs))
+      adds(errs(t, tr, tt, rows[n:]), err)
+    print("%-22s %5s %4.0f err %2.0f (%2.0f)" %
+          (f.split("/")[-1][:22], len(t.rows), nleaf.mu,
+           100*err.mu, 100*sd(err)))
 
-def opt1(f): # one dataset: wins for k=1,5,9, rand, best
-    names, *rows = list(csv(f))
-    t0 = Tbl([names] + rows)
-    ds0 = [disty(t0, r) for r in rows]
-    lo, mu = min(ds0), sum(ds0)/len(ds0)
-    win = lambda x: 100*(1 - (x - lo)/(mu - lo + 1/BIG))
-    out = {k: Num() for k in (1, 5, 9)}
-    rand, best = Num(), Num()
-    for _ in range(20):
-      shuffle(rows)
-      n = len(rows)//2
-      tr = Tbl([names] + rows[:n])
-      tt = tree(tr, cap=the.budget - the.check)
-      ds = [disty(tr, r) for r in rows[n:]]
-      add(best, min(ds))
-      add(rand, min(some(ds, the.check)))
-      for k in out:
-        picks = sorted(rows[n:], key=lambda r:
-                       guess(tr, tt, r, k))[:the.check]
-        add(out[k], min(disty(tr, r) for r in picks))
-    print("%-22s %5s " % (f.split("/")[-1][:22], len(rows))
-          + " ".join("k%s %4.0f" % (k, win(out[k].mu))
-                     for k in out)
-          + " rand %4.0f best %4.0f" %
-            (win(rand.mu), win(best.mu)))
+def wins(t, rows=None): # grader: row --> % of gap closed
+  ys = sorted(disty(t, r) for r in rows or t.rows)
+  lo, b4 = ys[0], sum(ys)/len(ys)
+  return lambda r: max(-100, min(100,
+    100*(1 - (disty(t, r) - lo)/(b4 - lo + 1/BIG))))
+
+def holdout(t): # model built on half ranks the other half
+  rows = shuffle(t.rows[:])
+  half = len(rows)//2
+  tr = clone(t, rows[:half][:the.lots])
+  tt = tree(tr, cap=the.budget - the.check) # 1 lab/leaf
+  top = sorted(rows[half:], key=lambda r: guess(tr, tt, r))
+  return min(top[:the.check],
+             key=lambda r: disty(tr, r)), rows[half:], tr
+
+def opt1(f): # one dataset: win of tree, rand, best picks
+  t = Tbl(csv(f))
+  W = wins(t)
+  treat, rand, best = Num(), Num(), Num()
+  for _ in range(20):
+    got, test, tr = holdout(t)
+    Y = lambda r: disty(tr, r)
+    add(treat, W(got))
+    add(rand,  W(min(some(test, the.budget), key=Y)))
+    add(best,  W(min(test, key=Y)))
+  print("%-22s %5s tree %4.0f rand %4.0f best %4.0f" %
+        (f.split("/")[-1][:22], len(t.rows),
+         treat.mu, rand.mu, best.mu))
 
 def test_opt():
   "optimize the 20 smallest moot data sets"
@@ -370,11 +362,8 @@ def test_tree():
   "recursive contrast splits; leaves show row counts"
   show(tree(Tbl(csv(the.file))))
 
-eg = {"-the": test_the, "-atom": test_atom,
-      "-csv": test_csv, "-contrasts": test_contrasts,
-      "-tree": test_tree, "-predict": test_predict,
-      "-err": test_err, "-opt": test_opt,
-      "-opt1": test_opt1}
+eg = {"-" + k[5:]: f for k, f in globals().items()
+      if k.startswith("test_")}
 
 def run(f): # reseed, call f, catch crashes
   seed(the.seed)
@@ -384,5 +373,5 @@ def run(f): # reseed, call f, catch crashes
 if __name__ == "__main__":
   for j, s in enumerate(sys.argv):
     if s in eg: run(eg[s])
-    elif hasattr(the, s.lstrip("-")):
-      setattr(the, s.lstrip("-"), atom(sys.argv[j + 1]))
+    elif (k := s.lstrip("-")) in the:
+      the[k] = atom(sys.argv[j + 1])
