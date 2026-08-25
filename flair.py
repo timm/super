@@ -258,7 +258,18 @@ def show(node, pre=None, txt=""): # print tree; n at left
     show(node.yes, sub, node.cut.txt)
     show(node.no,  sub, node.cut.anti)
 
-# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+def test_list():
+  "show the demos"
+  for k, f in eg.items():
+    print("%-12s %s" % (k, (f.__doc__ or "").strip()))
+
+def test_all():
+  "run all the demos"
+  for k, f in eg.items():
+    if f not in (test_all, test_push):
+      print("\n#", k); run(f)
+
 def test_push():
   "git commit -am saving; git push; git status"
   os.system("git commit -am saving; git push; git status")
