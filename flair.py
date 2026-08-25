@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 flair: contrast-set learner; fastmap halves + b^2/(b+r).
 (c) 2026 Tim Menzies <timm@ieee.org> MIT license
@@ -258,6 +259,10 @@ def show(node, pre=None, txt=""): # print tree; n at left
     show(node.no,  sub, node.cut.anti)
 
 # ---------------------------------------------------------------
+def test_push():
+  "git commit -am saving; git push; git status"
+  os.system("git commit -am saving; git push; git status")
+
 def test_the():
   "show current settings"
   print(the)
@@ -372,6 +377,6 @@ def run(f): # reseed, call f, catch crashes
 
 if __name__ == "__main__":
   for j, s in enumerate(sys.argv):
-    if s in eg: run(eg[s])
+    if f := eg.get("-" + s.lstrip("-")): run(f)
     elif (k := s.lstrip("-")) in the:
       the[k] = atom(sys.argv[j + 1])
