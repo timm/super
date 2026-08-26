@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 -B
+#HashBang
 """
 flair: contrast-set learner; fastmap halves + b^2/(b+r).
 (c) 2026 Tim Menzies <timm@ieee.org> MIT license
@@ -15,12 +16,13 @@ Options:
   --seed=1234    random number generation
   --file=/Users/timm/gits/moot/optimize/misc/auto93.csv
 """
+#SSOT #Config #Regx #DSL
 import re, os, sys, glob, traceback
-sys.dont_write_bytecode = True
 from math import exp, log
 from random import seed, choice
 from random import shuffle as shuffle_
-
+import sys; sys.dont_write_bytecode = True
+#Nocache
 def shuffle(t): shuffle_(t); return t # fluent shuffle
 from types import SimpleNamespace as o
 
@@ -33,6 +35,8 @@ def atom(s): # string --> number or stripped string
     except ValueError: return s.strip()
 
 class The(dict): __getattr__ = dict.get # the.k == the[k]
+#SSOT
+#Config
 the = The({k: atom(v)
            for k, v in re.findall(r"(\w+)=(\S+)", __doc__)})
 
