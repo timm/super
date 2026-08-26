@@ -1,0 +1,48 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+  :root { --fg: #111; --bg: #fff }
+  :root[data-theme=dark] { --fg: #eee; --bg: #000 }
+  #mode { position: fixed; top: 12px; right: 14px;
+          font-size: 18px; background: none; border: 0;
+          color: var(--fg); cursor: pointer }
+  .fork { position: fixed; top: 44px; left: -44px;
+          width: 220px; transform: rotate(-45deg);
+          background: #c00; color: #fff; text-align: center;
+          font-size: .75em; line-height: 2.2em;
+          text-decoration: none;
+          box-shadow: 0 2px 4px #0006 }
+  * { margin: 0; padding: 0; box-sizing: border-box }
+  html { background: var(--bg) }
+  body { color: var(--fg); font: 16px/1.35 Optima, sans-serif;
+         max-width: 600px; margin: 0 auto;
+         padding: 20px 10px 40px 20px }
+  h2, h3 { margin-top: 48px; font-size: 1em; text-align: center;
+           text-transform: uppercase; letter-spacing: .08em }
+  h2 { border-top: 2px solid; padding-top: 36px;
+       margin-bottom: 32px }
+  p { margin-top: 16px }
+  .num { display: inline-block; width: 1.6em;
+         line-height: 1.6em; border-radius: 50%;
+         background: var(--fg); color: var(--bg);
+         text-align: center; font-weight: 700;
+         margin-right: .5em }
+  pre { margin-top: 16px; padding: 10px; font-size: .8em;
+        overflow-x: auto; background: #eef2fa; color: #111 }
+  [data-theme=dark] pre { background: #181818; color: #ccc }
+  [data-theme=dark] pre .kw, [data-theme=dark] pre .cf,
+  [data-theme=dark] pre .im { color: #c678dd }
+  [data-theme=dark] pre .st, [data-theme=dark] pre .ss
+  { color: #98c379 }
+  [data-theme=dark] pre .dv, [data-theme=dark] pre .fl,
+  [data-theme=dark] pre .bn { color: #d19a66 }
+  [data-theme=dark] pre .co, [data-theme=dark] pre .do
+  { color: #7f848e }
+  [data-theme=dark] pre .fu { color: #61afef }
+  [data-theme=dark] pre .ot, [data-theme=dark] pre .bu
+  { color: #56b6c2 }
+  [data-theme=dark] pre .va { color: #e06c75 }
+  [data-theme=dark] pre .op, [data-theme=dark] pre .sc
+  { color: #ccc }
+  hr { border: 0; border-top: 1px solid #ccc; margin: 32px 0 }
+  a { color: inherit }
+</style>

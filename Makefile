@@ -22,6 +22,14 @@ xargs: ## run What+Flag on every Data csv, Cpu at a time
 	  -M letter -o - $< | ps2pdf - $@
 	@open $@
 
-docs/flair.md: flair.py flair.txt pytxt2py.py
+## x.py + x.txt ==> docs/x.md ==> docs/x.html
+.SECONDARY: # keep the intermediate .md files
+docs/%.md: %.py %.txt xpand.awk fence.awk
 	@mkdir -p docs
-	@python3 pytxt2py.py flair.py flair.txt > $@
+	@gawk -f xpand.awk $*.txt $*.py | gawk -f fence.awk > $@
+
+docs/%.html: docs/%.md docs/head.html docs/body.html circle.awk
+	@gawk -f circle.awk $< | \
+	  pandoc -f markdown -H docs/head.html -B docs/body.html \
+	    --syntax-highlighting=tango -s -o $@
+	@open $@

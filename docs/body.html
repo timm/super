@@ -1,0 +1,15 @@
+<a class="fork"
+   href="https://github.com/timm/super"><i
+   class="fa-brands fa-github"></i> Fork me on GitHub</a>
+<button id="mode" title="light/dark"><i
+   class="fa-solid fa-circle-half-stroke"></i></button>
+<script>
+var r = document.documentElement,
+    b = document.getElementById('mode');
+r.dataset.theme = localStorage.mode ||
+  (matchMedia('(prefers-color-scheme: dark)').matches
+   ? 'dark' : 'light');
+b.onclick = function () {
+  r.dataset.theme = localStorage.mode =
+    (r.dataset.theme == 'dark' ? 'light' : 'dark') };
+</script>

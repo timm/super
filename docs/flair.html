@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>-</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root { --fg: #111; --bg: #fff }
+    :root[data-theme=dark] { --fg: #eee; --bg: #000 }
+    #mode { position: fixed; top: 12px; right: 14px;
+            font-size: 18px; background: none; border: 0;
+            color: var(--fg); cursor: pointer }
+    .fork { position: fixed; top: 44px; left: -44px;
+            width: 220px; transform: rotate(-45deg);
+            background: #c00; color: #fff; text-align: center;
+            font-size: .75em; line-height: 2.2em;
+            text-decoration: none;
+            box-shadow: 0 2px 4px #0006 }
+    * { margin: 0; padding: 0; box-sizing: border-box }
+    html { background: var(--bg) }
+    body { color: var(--fg); font: 16px/1.35 Optima, sans-serif;
+           max-width: 600px; margin: 0 auto;
+           padding: 20px 10px 40px 20px }
+    h2, h3 { margin-top: 48px; font-size: 1em; text-align: center;
+             text-transform: uppercase; letter-spacing: .08em }
+    h2 { border-top: 2px solid; padding-top: 36px;
+         margin-bottom: 32px }
+    p { margin-top: 16px }
+    .num { display: inline-block; width: 1.6em;
+           line-height: 1.6em; border-radius: 50%;
+           background: var(--fg); color: var(--bg);
+           text-align: center; font-weight: 700;
+           margin-right: .5em }
+    pre { margin-top: 16px; padding: 10px; font-size: .8em;
+          overflow-x: auto; background: #eef2fa; color: #111 }
+    [data-theme=dark] pre { background: #181818; color: #ccc }
+    [data-theme=dark] pre .kw, [data-theme=dark] pre .cf,
+    [data-theme=dark] pre .im { color: #c678dd }
+    [data-theme=dark] pre .st, [data-theme=dark] pre .ss
+    { color: #98c379 }
+    [data-theme=dark] pre .dv, [data-theme=dark] pre .fl,
+    [data-theme=dark] pre .bn { color: #d19a66 }
+    [data-theme=dark] pre .co, [data-theme=dark] pre .do
+    { color: #7f848e }
+    [data-theme=dark] pre .fu { color: #61afef }
+    [data-theme=dark] pre .ot, [data-theme=dark] pre .bu
+    { color: #56b6c2 }
+    [data-theme=dark] pre .va { color: #e06c75 }
+    [data-theme=dark] pre .op, [data-theme=dark] pre .sc
+    { color: #ccc }
+    hr { border: 0; border-top: 1px solid #ccc; margin: 32px 0 }
+    a { color: inherit }
+  </style>
+</head>
+<body>
+<a class="fork"
+   href="https://github.com/timm/super"><i
+   class="fa-brands fa-github"></i> Fork me on GitHub</a>
+<button id="mode" title="light/dark"><i
+   class="fa-solid fa-circle-half-stroke"></i></button>
+<script>
+var r = document.documentElement,
+    b = document.getElementById('mode');
+r.dataset.theme = localStorage.mode ||
+  (matchMedia('(prefers-color-scheme: dark)').matches
+   ? 'dark' : 'light');
+b.onclick = function () {
+  r.dataset.theme = localStorage.mode =
+    (r.dataset.theme == 'dark' ? 'light' : 'dark') };
+</script>
+<h3 id="hashbang-no-text-yet">HashBang (no text yet)</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">flair: contrast-set learner; fastmap halves + b^2/(b+r).</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">(c) 2026 Tim Menzies &lt;timm@ieee.org&gt; MIT license</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Options:</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>p<span class="op">=</span><span class="dv">2</span>          minkowski coefficient</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>few<span class="op">=</span><span class="dv">256</span>      sub<span class="op">-</span>sample size <span class="cf">for</span> pole finding</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>stop<span class="op">=</span><span class="dv">20</span>      stopping rule <span class="cf">for</span> recursive tree generation</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>bins<span class="op">=</span><span class="dv">16</span>      number of bins <span class="cf">for</span> discretization</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>lots<span class="op">=</span><span class="dv">2048</span>    <span class="bu">max</span> rows used to build <span class="bu">any</span> tree</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>budget<span class="op">=</span><span class="dv">40</span>    total labelling budget <span class="cf">for</span> optimizing</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>check<span class="op">=</span><span class="dv">5</span>      optimization: how many top picks to label</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>seed<span class="op">=</span><span class="dv">1234</span>    random number generation</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span><span class="bu">file</span><span class="op">=/</span>Users<span class="op">/</span>timm<span class="op">/</span>gits<span class="op">/</span>moot<span class="op">/</span>optimize<span class="op">/</span>misc<span class="op">/</span>auto93.csv</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;</span></span></code></pre></div>
+<h3 id="ssot">SSOT</h3>
+<p>SSOT = single source of truth. All the settings live in one place:
+the <strong>doc</strong> string at top of file. The <code>the</code>
+variable is built by regular expression, pulling the flags and their
+defaults from the help text. So adding a new setting means editing one
+string; the code and its documentation can never disagree.</p>
+<h3 id="config">Config</h3>
+<p><span class="num">1</span> Settings are a dict that also answers
+attribute access (the.bins == the[“bins”]). The command line updates
+them: any <code>--key value</code> pair whose key names a setting gets
+atom-ed and stored. Demos run via <code>-name</code> flags looked up in
+the <code>eg</code> table (built from globals: every test_* function is
+a demo).</p>
+<h3 id="regx-no-text-yet">Regx (no text yet)</h3>
+<h3 id="dsl-no-text-yet">DSL (no text yet)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> re, os, sys, glob, traceback</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> math <span class="im">import</span> exp, log</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> random <span class="im">import</span> seed, choice</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> random <span class="im">import</span> shuffle <span class="im">as</span> shuffle_</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys<span class="op">;</span> sys.dont_write_bytecode <span class="op">=</span> <span class="va">True</span></span></code></pre></div>
+<h3 id="nocache-no-text-yet">Nocache (no text yet)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> shuffle(t): shuffle_(t)<span class="op">;</span> <span class="cf">return</span> t <span class="co"># fluent shuffle</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> types <span class="im">import</span> SimpleNamespace <span class="im">as</span> o</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>BIG <span class="op">=</span> <span class="fl">1e30</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> atom(s): <span class="co"># string --&gt; number or stripped string</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span>: <span class="cf">return</span> <span class="bu">int</span>(s)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>: <span class="cf">return</span> <span class="bu">float</span>(s)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span>: <span class="cf">return</span> s.strip()</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> The(<span class="bu">dict</span>): <span class="fu">__getattr__</span> <span class="op">=</span> <span class="bu">dict</span>.get <span class="co"># the.k == the[k]</span></span></code></pre></div>
+<h3 id="ssot-1">SSOT</h3>
+<p>SSOT = single source of truth. All the settings live in one place:
+the <strong>doc</strong> string at top of file. The <code>the</code>
+variable is built by regular expression, pulling the flags and their
+defaults from the help text. So adding a new setting means editing one
+string; the code and its documentation can never disagree.</p>
+<h3 id="config-1">Config</h3>
+<p><span class="num">1</span> Settings are a dict that also answers
+attribute access (the.bins == the[“bins”]). The command line updates
+them: any <code>--key value</code> pair whose key names a setting gets
+atom-ed and stored. Demos run via <code>-name</code> flags looked up in
+the <code>eg</code> table (built from globals: every test_* function is
+a demo).</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>the <span class="op">=</span> The({k: atom(v)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>           <span class="cf">for</span> k, v <span class="kw">in</span> re.findall(<span class="vs">r&quot;</span><span class="kw">(</span><span class="dv">\w</span><span class="op">+</span><span class="kw">)</span><span class="vs">=</span><span class="kw">(</span><span class="dv">\S</span><span class="op">+</span><span class="kw">)</span><span class="vs">&quot;</span>, __doc__)})</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> csv(<span class="bu">file</span>): <span class="co"># iterate a csv file&#39;s atom rows</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">with</span> <span class="bu">open</span>(<span class="bu">file</span>) <span class="im">as</span> f:</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> s <span class="kw">in</span> f:</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> s <span class="op">:=</span> s.strip():</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">yield</span> [atom(x) <span class="cf">for</span> x <span class="kw">in</span> s.split(<span class="st">&quot;,&quot;</span>)]</span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Num(): <span class="cf">return</span> o(n<span class="op">=</span><span class="dv">0</span>, mu<span class="op">=</span><span class="dv">0</span>, m2<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Sym(): <span class="cf">return</span> {}</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Col(s): <span class="cf">return</span> Num() <span class="cf">if</span> s[<span class="dv">0</span>].isupper() <span class="cf">else</span> Sym()</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Tbl(src):</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> adds(src, o(rows<span class="op">=</span>[], cols<span class="op">=</span><span class="va">None</span>, center<span class="op">=</span><span class="va">None</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> clone(tbl,rows<span class="op">=</span>[]): <span class="co"># make new  with same structure as tbl</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> Tbl( [tbl.cols.names]<span class="op">+</span>rows )</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Cols(names): <span class="co"># names --&gt; columns grouped into x,y</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  i <span class="op">=</span> o(names<span class="op">=</span>names, <span class="bu">all</span><span class="op">=</span>[], x<span class="op">=</span>{}, y<span class="op">=</span>{}, klass<span class="op">=</span><span class="va">None</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> at, s <span class="kw">in</span> <span class="bu">enumerate</span>(names):</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    i.<span class="bu">all</span> <span class="op">+=</span> [Col(s)]</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>   s[<span class="op">-</span><span class="dv">1</span>] <span class="op">==</span> <span class="st">&quot;X&quot;</span>: <span class="cf">pass</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> s[<span class="op">-</span><span class="dv">1</span>] <span class="op">==</span> <span class="st">&quot;!&quot;</span>: i.klass <span class="op">=</span> at</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> s[<span class="op">-</span><span class="dv">1</span>] <span class="kw">in</span> <span class="st">&quot;+-&quot;</span>: i.y[at] <span class="op">=</span> s[<span class="op">-</span><span class="dv">1</span>] <span class="op">==</span> <span class="st">&quot;+&quot;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>: i.x[at] <span class="op">=</span> at</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> i</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> adds(src, i<span class="op">=</span><span class="va">None</span>): <span class="co"># add all from any iterable</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  i <span class="op">=</span> i <span class="kw">or</span> Num()</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> x <span class="kw">in</span> src: add(i, x)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> i</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add(i, v, w<span class="op">=</span><span class="dv">1</span>): <span class="co"># add value (or row) v, weight w</span></span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> v <span class="op">==</span> <span class="st">&quot;?&quot;</span>: <span class="cf">return</span> v</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>   <span class="bu">type</span>(i) <span class="kw">is</span> <span class="bu">dict</span>: i[v] <span class="op">=</span> w <span class="op">+</span> i.get(v, <span class="dv">0</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="bu">hasattr</span>(i, <span class="st">&quot;mu&quot;</span>): welford(i, v, w)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="bu">hasattr</span>(i, <span class="st">&quot;rows&quot;</span>):</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    i.center <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> i.cols: i.rows <span class="op">+=</span> [v]<span class="op">;</span> add(i.cols, v, w)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>: i.cols <span class="op">=</span> Cols(v)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="bu">hasattr</span>(i, <span class="st">&quot;x&quot;</span>):</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> c, x <span class="kw">in</span> <span class="bu">zip</span>(i.<span class="bu">all</span>, v): add(c, x, w)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> v</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> welford(i, v, w): <span class="co"># update a Num in place</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  i.n <span class="op">+=</span> w</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> i.n <span class="op">&lt;</span> <span class="dv">1</span>: i.n <span class="op">=</span> i.mu <span class="op">=</span> i.m2 <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> v <span class="op">-</span> i.mu</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    i.mu <span class="op">+=</span> w<span class="op">*</span>d<span class="op">/</span>i.n</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    i.m2 <span class="op">+=</span> w<span class="op">*</span>d<span class="op">*</span>(v <span class="op">-</span> i.mu)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mid(c): <span class="co"># middle: mode (Sym), mu (Num), mids (Tbl)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">max</span>(c, key<span class="op">=</span>c.get) <span class="cf">if</span> <span class="bu">type</span>(c)<span class="op">==</span><span class="bu">dict</span> <span class="cf">else</span> c.mu</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mids(tbl): <span class="co"># JIT center; add() invalidates the cache</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  tbl.center <span class="op">=</span> tbl.center <span class="kw">or</span> [mid(c) <span class="cf">for</span> c <span class="kw">in</span> tbl.cols.<span class="bu">all</span>]</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> tbl.center</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> div(c): <span class="co"># diversity: ent (Sym) or sd (Num)</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> ent(c) <span class="cf">if</span> <span class="bu">type</span>(c) <span class="kw">is</span> <span class="bu">dict</span> <span class="cf">else</span> sd(c)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sd(c): <span class="co"># diversity of a Num</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="dv">0</span> <span class="cf">if</span> c.n <span class="op">&lt;</span> <span class="dv">2</span> <span class="cf">else</span> (c.m2<span class="op">/</span>(c.n <span class="op">-</span> <span class="dv">1</span>))<span class="op">**</span><span class="fl">0.5</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ent(d): <span class="co"># diversity of a Sym</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  n <span class="op">=</span> <span class="bu">sum</span>(d.values())</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">-</span><span class="bu">sum</span>(v<span class="op">/</span>n<span class="op">*</span>log(v<span class="op">/</span>n, <span class="dv">2</span>) <span class="cf">for</span> v <span class="kw">in</span> d.values() <span class="cf">if</span> v <span class="op">&gt;</span> <span class="dv">0</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> norm(c, v): <span class="co"># value --&gt; 0..1, logistic cdf, memoized</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> v <span class="op">==</span> <span class="st">&quot;?&quot;</span>: <span class="cf">return</span> v</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span>: <span class="cf">return</span> c.memo[v]</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">except</span> <span class="pp">AttributeError</span>: c.memo <span class="op">=</span> {}</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">except</span> <span class="pp">KeyError</span>: <span class="cf">pass</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  z <span class="op">=</span> (v <span class="op">-</span> c.mu)<span class="op">/</span>(sd(c) <span class="op">+</span> <span class="dv">1</span><span class="op">/</span>BIG)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  out <span class="op">=</span> <span class="dv">1</span><span class="op">/</span>(<span class="dv">1</span> <span class="op">+</span> exp(<span class="op">-</span><span class="fl">1.7</span><span class="op">*</span><span class="bu">max</span>(<span class="op">-</span><span class="dv">3</span>, <span class="bu">min</span>(<span class="dv">3</span>, z))))</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  c.memo[v] <span class="op">=</span> out</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> out</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> disty(t, row): <span class="co"># d2h: distance of goals to best corner</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  d, n <span class="op">=</span> <span class="dv">0</span>, <span class="dv">1</span><span class="op">/</span>BIG</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> at, w <span class="kw">in</span> t.cols.y.items():</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    v <span class="op">=</span> norm(t.cols.<span class="bu">all</span>[at], row[at])</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v <span class="op">!=</span> <span class="st">&quot;?&quot;</span>:</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>      n <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> d <span class="op">+=</span> <span class="bu">abs</span>(v <span class="op">-</span> w)<span class="op">**</span>the.p</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (d<span class="op">/</span>n)<span class="op">**</span>(<span class="dv">1</span><span class="op">/</span>the.p)</span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> some(t, n): <span class="co"># n random picks from list t</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> [choice(t) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">min</span>(n, <span class="bu">len</span>(t)))]</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> distx(t, r1, r2): <span class="co"># x-column distance</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  d, n <span class="op">=</span> <span class="dv">0</span>, <span class="dv">1</span><span class="op">/</span>BIG</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> at <span class="kw">in</span> t.cols.x:</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    n <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    d <span class="op">+=</span> _distx(t.cols.<span class="bu">all</span>[at], r1[at], r2[at])<span class="op">**</span>the.p</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (d<span class="op">/</span>n)<span class="op">**</span>(<span class="dv">1</span><span class="op">/</span>the.p)</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _distx(c, a, b): <span class="co"># helper for one column</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> a <span class="op">==</span> <span class="st">&quot;?&quot;</span> <span class="kw">and</span> b <span class="op">==</span> <span class="st">&quot;?&quot;</span>: <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="bu">type</span>(c) <span class="kw">is</span> <span class="bu">dict</span>: <span class="cf">return</span> a <span class="op">!=</span> b</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  a, b <span class="op">=</span> norm(c, a), norm(c, b)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> a <span class="op">==</span> <span class="st">&quot;?&quot;</span>: a <span class="op">=</span> <span class="dv">1</span> <span class="cf">if</span> b <span class="op">&lt;</span> <span class="fl">0.5</span> <span class="cf">else</span> <span class="dv">0</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> b <span class="op">==</span> <span class="st">&quot;?&quot;</span>: b <span class="op">=</span> <span class="dv">1</span> <span class="cf">if</span> a <span class="op">&lt;</span> <span class="fl">0.5</span> <span class="cf">else</span> <span class="dv">0</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">abs</span>(a <span class="op">-</span> b)</span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> poles(t, rows): <span class="co"># fastmap projector along 2 far poles</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  rows <span class="op">=</span> some(rows, the.few)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  far  <span class="op">=</span> <span class="kw">lambda</span> r: <span class="bu">sorted</span>(rows, key<span class="op">=</span><span class="kw">lambda</span> z: distx(t, z, r))[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  a <span class="op">=</span> far(rows[<span class="dv">0</span>])</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  b <span class="op">=</span> far(a)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  c <span class="op">=</span> distx(t, a, b) <span class="op">+</span> <span class="dv">1</span><span class="op">/</span>BIG</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">lambda</span> r:(distx(t,a,r)<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> c<span class="op">*</span>c <span class="op">-</span> distx(t,b,r)<span class="op">**</span><span class="dv">2</span>)<span class="op">/</span>(<span class="dv">2</span><span class="op">*</span>c)</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="bu">bin</span>(c, v): <span class="co"># top-level col c, value v --&gt; bin 0..bins-1</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> v <span class="op">==</span> <span class="st">&quot;?&quot;</span> <span class="kw">or</span> <span class="bu">type</span>(c) <span class="kw">is</span> <span class="bu">dict</span>: <span class="cf">return</span> v</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">int</span>(norm(c, v)<span class="op">*</span>the.bins)</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> binned(t, row, d, ends): <span class="co"># count row&#39;s bins into d</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> at <span class="kw">in</span> t.cols.x:</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    v <span class="op">=</span> <span class="bu">bin</span>(t.cols.<span class="bu">all</span>[at], row[at])</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v <span class="op">!=</span> <span class="st">&quot;?&quot;</span>:</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>      d[at][v] <span class="op">=</span> <span class="dv">1</span> <span class="op">+</span> d[at].get(v, <span class="dv">0</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> <span class="bu">type</span>(t.cols.<span class="bu">all</span>[at]) <span class="kw">is</span> <span class="kw">not</span> <span class="bu">dict</span>:</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> row[at]</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>        lo, hi <span class="op">=</span> ends[at].get(v, (x, x))</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>        ends[at][v] <span class="op">=</span> (<span class="bu">min</span>(lo, x), <span class="bu">max</span>(hi, x))</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> halves(t, rows): <span class="co"># median-split rows; bin as we go</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  cl <span class="op">=</span> {at: {} <span class="cf">for</span> at <span class="kw">in</span> t.cols.x}</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  cr <span class="op">=</span> {at: {} <span class="cf">for</span> at <span class="kw">in</span> t.cols.x}</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  ends <span class="op">=</span> {at: {} <span class="cf">for</span> at <span class="kw">in</span> t.cols.x} <span class="co"># (lo,hi) per num bin</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  nl <span class="op">=</span> nr <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> j, row <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">sorted</span>(rows, key<span class="op">=</span>poles(t, rows))):</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> j <span class="op">&lt;</span> <span class="bu">len</span>(rows)<span class="op">//</span><span class="dv">2</span>: d, nl <span class="op">=</span> cl, nl <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:                d, nr <span class="op">=</span> cr, nr <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    binned(t, row, d, ends)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> cl, cr, nl, nr, ends</span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> span(name, at, lo, hi, b, r): <span class="co"># scored, self-labeling</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  g <span class="op">=</span> <span class="kw">lambda</span> x: x <span class="cf">if</span> <span class="bu">type</span>(x) <span class="kw">is</span> <span class="bu">str</span> <span class="cf">else</span> <span class="st">&quot;</span><span class="sc">%.3g</span><span class="st">&quot;</span> <span class="op">%</span> x</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>   lo <span class="op">==</span> hi:   a, z <span class="op">=</span> <span class="ss">f&quot;== </span><span class="sc">{</span>g(lo)<span class="sc">}</span><span class="ss">&quot;</span>,  <span class="ss">f&quot;!= </span><span class="sc">{</span>g(lo)<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> lo <span class="op">==</span> <span class="op">-</span>BIG: a, z <span class="op">=</span> <span class="ss">f&quot;&lt;= </span><span class="sc">{</span>g(hi)<span class="sc">}</span><span class="ss">&quot;</span>,  <span class="ss">f&quot;&gt; </span><span class="sc">{</span>g(hi)<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> hi <span class="op">==</span>  BIG: a, z <span class="op">=</span> <span class="ss">f&quot;&gt;= </span><span class="sc">{</span>g(lo)<span class="sc">}</span><span class="ss">&quot;</span>,  <span class="ss">f&quot;&lt; </span><span class="sc">{</span>g(lo)<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>: a,z <span class="op">=</span> <span class="ss">f&quot;in </span><span class="sc">{</span>g(lo)<span class="sc">}</span><span class="ss">..</span><span class="sc">{</span>g(hi)<span class="sc">}</span><span class="ss">&quot;</span>,<span class="ss">f&quot;out </span><span class="sc">{</span>g(lo)<span class="sc">}</span><span class="ss">..</span><span class="sc">{</span>g(hi)<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> o(name<span class="op">=</span>name, at<span class="op">=</span>at, lo<span class="op">=</span>lo, hi<span class="op">=</span>hi,</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>           txt<span class="op">=</span><span class="ss">f&quot;</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss"> </span><span class="sc">{</span>a<span class="sc">}</span><span class="ss">&quot;</span>, anti<span class="op">=</span><span class="ss">f&quot;</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss"> </span><span class="sc">{</span>z<span class="sc">}</span><span class="ss">&quot;</span>,</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>           score<span class="op">=</span><span class="bu">max</span>(b, r)<span class="op">**</span><span class="dv">2</span><span class="op">/</span>(b <span class="op">+</span> r <span class="op">+</span> <span class="dv">1</span><span class="op">/</span>BIG))</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> spans(t, rows): <span class="co"># yield the spans of rows&#39; two halves</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  cl, cr, nl, nr, ends <span class="op">=</span> halves(t, rows)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> syms(at, dl, dr): <span class="co"># one span per symbol</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> dl.keys() <span class="op">|</span> dr.keys():</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">yield</span> span(t.cols.names[at], at, k, k,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>                 dl.get(k, <span class="dv">0</span>)<span class="op">/</span>nl, dr.get(k, <span class="dv">0</span>)<span class="op">/</span>nr)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> cuts(at, dl, dr, ends1): <span class="co"># sweep the bin boundaries</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    B <span class="op">=</span> R <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(the.bins <span class="op">-</span> <span class="dv">1</span>):</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>      B <span class="op">+=</span> dl.get(j, <span class="dv">0</span>)<span class="op">/</span>nl</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>      R <span class="op">+=</span> dr.get(j, <span class="dv">0</span>)<span class="op">/</span>nr</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> j <span class="kw">in</span> ends1 <span class="kw">and</span> j <span class="op">+</span> <span class="dv">1</span> <span class="kw">in</span> ends1: <span class="co"># natural bounds</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">yield</span> span(t.cols.names[at], at,</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>                   <span class="op">-</span>BIG, ends1[j][<span class="dv">1</span>], B, R)</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">yield</span> span(t.cols.names[at], at,</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>                   ends1[j<span class="op">+</span><span class="dv">1</span>][<span class="dv">0</span>], BIG, <span class="dv">1</span><span class="op">-</span>B, <span class="dv">1</span><span class="op">-</span>R)</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> at <span class="kw">in</span> t.cols.x:</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">type</span>(t.cols.<span class="bu">all</span>[at]) <span class="kw">is</span> <span class="bu">dict</span>:</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>      <span class="cf">yield</span> <span class="cf">from</span> syms(at, cl[at], cr[at])</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">yield</span> <span class="cf">from</span> cuts(at, cl[at], cr[at], ends[at])</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> contrasts(t, rows): <span class="co"># best span over all x columns</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">max</span>(spans(t,rows), key<span class="op">=</span><span class="kw">lambda</span> z: z.score,</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>             default<span class="op">=</span><span class="va">None</span>)</span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> selects(z, row): <span class="co"># does row fall inside span z?</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  v <span class="op">=</span> row[z.at]</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> v <span class="op">!=</span> <span class="st">&quot;?&quot;</span> <span class="kw">and</span> z.lo <span class="op">&lt;=</span> v <span class="op">&lt;=</span> z.hi</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> tree(t, cap<span class="op">=</span>BIG): <span class="co"># grow subtrees, at most cap leaves</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  n <span class="op">=</span> [<span class="dv">1</span>]</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> grow(rows):</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    node <span class="op">=</span> o(n<span class="op">=</span><span class="bu">len</span>(rows), rows<span class="op">=</span>rows, cut<span class="op">=</span><span class="va">None</span>)</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(rows) <span class="op">&gt;</span> the.stop <span class="kw">and</span> n[<span class="dv">0</span>] <span class="op">&lt;</span> cap:</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> z <span class="op">:=</span> contrasts(t, rows):</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>        yes <span class="op">=</span> [r <span class="cf">for</span> r <span class="kw">in</span> rows <span class="cf">if</span> selects(z, r)]</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>        no  <span class="op">=</span> [r <span class="cf">for</span> r <span class="kw">in</span> rows <span class="cf">if</span> <span class="kw">not</span> selects(z, r)]</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="dv">0</span> <span class="op">&lt;</span> <span class="bu">len</span>(yes) <span class="op">&lt;</span> <span class="bu">len</span>(rows):</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>          n[<span class="dv">0</span>] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>          node.cut <span class="op">=</span> z</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>          node.yes <span class="op">=</span> grow(yes)</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>          node.no  <span class="op">=</span> grow(no)</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> node</span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> grow(t.rows)</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> leaves(node): <span class="co"># how many leaves in this tree?</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> leaves(node.yes) <span class="op">+</span> leaves(node.no) <span class="cf">if</span> node.cut <span class="cf">else</span> <span class="dv">1</span></span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> leaf(node, row): <span class="co"># walk row down to its leaf</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> node.cut:</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    node <span class="op">=</span> node.yes <span class="cf">if</span> selects(node.cut, row) <span class="cf">else</span> node.no</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> node</span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> guess(t, node, row): <span class="co"># d2h of leaf row nearest to mids</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  l <span class="op">=</span> leaf(node, row)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="kw">not</span> <span class="bu">hasattr</span>(l, <span class="st">&quot;est&quot;</span>):</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    l.tbl <span class="op">=</span> clone(t, l.rows)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> mids(l.tbl)</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    few <span class="op">=</span> some(l.rows, <span class="bu">min</span>(<span class="bu">len</span>(l.rows), the.few))</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    l.est<span class="op">=</span>disty(t, <span class="bu">min</span>(few, key<span class="op">=</span><span class="kw">lambda</span> r: distx(t,r,c)))</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> l.est</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show(node, pre<span class="op">=</span><span class="va">None</span>, txt<span class="op">=</span><span class="st">&quot;&quot;</span>): <span class="co"># print tree; n at left</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>node<span class="sc">.</span>n<span class="sc">:5}</span><span class="ss"> </span><span class="sc">{</span>pre <span class="kw">or</span> <span class="st">&#39;&#39;</span><span class="sc">}{</span>txt<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> node.cut:</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">=</span> <span class="st">&quot;&quot;</span> <span class="cf">if</span> pre <span class="kw">is</span> <span class="va">None</span> <span class="cf">else</span> pre <span class="op">+</span> <span class="st">&quot;|  &quot;</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    show(node.yes, sub, node.cut.txt)</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    show(node.no,  sub, node.cut.anti)</span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---------------------------------------------------------------</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_list():</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;show the demos&quot;</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> k, f <span class="kw">in</span> eg.items():</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;</span><span class="sc">%-12s</span><span class="st"> </span><span class="sc">%s</span><span class="st">&quot;</span> <span class="op">%</span> (k, (f.__doc__ <span class="kw">or</span> <span class="st">&quot;&quot;</span>).strip()))</span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_all():</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;run all the demos&quot;</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> k, f <span class="kw">in</span> eg.items():</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> f <span class="kw">not</span> <span class="kw">in</span> (test_all, test_push):</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>      <span class="bu">print</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">#&quot;</span>, k)<span class="op">;</span> run(f)</span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_push():</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;git commit -am saving; git push; git status&quot;</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  os.system(<span class="st">&quot;git commit -am saving; git push; git status&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_the():</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;show current settings&quot;</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(the)</span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_atom():</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;strings coerce to numbers or stripped strings&quot;</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">assert</span> atom(<span class="st">&quot;2&quot;</span>) <span class="op">==</span> <span class="dv">2</span> <span class="kw">and</span> atom(<span class="st">&quot;2.1&quot;</span>) <span class="op">==</span> <span class="fl">2.1</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">assert</span> atom(<span class="st">&quot; a &quot;</span>) <span class="op">==</span> <span class="st">&quot;a&quot;</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">&quot;&#39;2&#39; -&gt;&quot;</span>, atom(<span class="st">&quot;2&quot;</span>), <span class="st">&quot;| &#39; a &#39; -&gt;&quot;</span>, atom(<span class="st">&quot; a &quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_csv():</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;csv reader finds many rows in the.file&quot;</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  n <span class="op">=</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="cf">for</span> _ <span class="kw">in</span> csv(the.<span class="bu">file</span>))</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">assert</span> n <span class="op">&gt;</span> <span class="dv">100</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(n, <span class="st">&quot;rows&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_contrasts():</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;name this table&#39;s two halves&quot;</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  t <span class="op">=</span> Tbl(csv(the.<span class="bu">file</span>))</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  z <span class="op">=</span> contrasts(t, t.rows)</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">assert</span> z <span class="kw">and</span> z.score <span class="op">&gt;</span> <span class="fl">0.5</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(z.txt, <span class="st">&quot;score </span><span class="sc">%.2f</span><span class="st">&quot;</span> <span class="op">%</span> z.score)</span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> errs(t, tr, tt, rows): <span class="co"># prediction errors, one holdout</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> ((<span class="bu">abs</span>(guess(tr, tt, r) <span class="op">-</span> disty(tr, r))</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>           <span class="cf">for</span> r <span class="kw">in</span> rows))</span></code></pre></div>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_predict():</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;20 runs: mu, sd of |predicted - actual| d2h&quot;</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  t, err <span class="op">=</span> Tbl(csv(the.<span class="bu">file</span>)), Num()</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">20</span>):</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> shuffle(t.rows[:])</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(rows)<span class="op">*</span><span class="dv">2</span><span class="op">//</span><span class="dv">3</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>    tr <span class="op">=</span> clone(t, rows[:n])</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    adds(errs(t, tr, tree(tr), rows[n:]), err)</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">&quot;err mu </span><span class="sc">%.3f</span><span class="st"> sd </span><span class="sc">%.3f</span><span class="st">&quot;</span> <span class="op">%</span> (err.mu, sd(err)))</span></code></pre></div>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_err():</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;20 moot sets, 20 repeats: err mu/sd for k=1,3,5,7,9&quot;</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  fs <span class="op">=</span> <span class="bu">sorted</span>(glob.glob(</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">&quot;/Users/timm/gits/moot/optimize/**/*.csv&quot;</span>,</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>         recursive<span class="op">=</span><span class="va">True</span>), key<span class="op">=</span>os.path.getsize)[:<span class="dv">20</span>]</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> f <span class="kw">in</span> fs:</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> Tbl(csv(f))</span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>    err, nleaf <span class="op">=</span> Num(), Num()</span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">20</span>):</span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>      rows <span class="op">=</span> shuffle(t.rows[:])</span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>      n <span class="op">=</span> <span class="bu">len</span>(rows)<span class="op">*</span><span class="dv">2</span><span class="op">//</span><span class="dv">3</span></span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>      tr <span class="op">=</span> clone(t, rows[:n])</span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a>      tt <span class="op">=</span> tree(tr)</span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a>      add(nleaf, leaves(tt))</span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a>      adds(errs(t, tr, tt, rows[n:]), err)</span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;</span><span class="sc">%-22s</span><span class="st"> </span><span class="sc">%5s</span><span class="st"> %4.0f err %2.0f (%2.0f)&quot;</span> <span class="op">%</span></span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a>          (f.split(<span class="st">&quot;/&quot;</span>)[<span class="op">-</span><span class="dv">1</span>][:<span class="dv">22</span>], <span class="bu">len</span>(t.rows), nleaf.mu,</span>
+<span id="cb50-18"><a href="#cb50-18" aria-hidden="true" tabindex="-1"></a>           <span class="dv">100</span><span class="op">*</span>err.mu, <span class="dv">100</span><span class="op">*</span>sd(err)))</span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> wins(t, rows<span class="op">=</span><span class="va">None</span>): <span class="co"># grader: row --&gt; % of gap closed</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  ys <span class="op">=</span> <span class="bu">sorted</span>(disty(t, r) <span class="cf">for</span> r <span class="kw">in</span> rows <span class="kw">or</span> t.rows)</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  lo, b4 <span class="op">=</span> ys[<span class="dv">0</span>], <span class="bu">sum</span>(ys)<span class="op">/</span><span class="bu">len</span>(ys)</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">lambda</span> r: <span class="bu">max</span>(<span class="op">-</span><span class="dv">100</span>, <span class="bu">min</span>(<span class="dv">100</span>,</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span><span class="op">*</span>(<span class="dv">1</span> <span class="op">-</span> (disty(t, r) <span class="op">-</span> lo)<span class="op">/</span>(b4 <span class="op">-</span> lo <span class="op">+</span> <span class="dv">1</span><span class="op">/</span>BIG))))</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> holdout(t): <span class="co"># model built on half ranks the other half</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  rows <span class="op">=</span> shuffle(t.rows[:])</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  half <span class="op">=</span> <span class="bu">len</span>(rows)<span class="op">//</span><span class="dv">2</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  tr <span class="op">=</span> clone(t, rows[:half][:the.lots])</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>  tt <span class="op">=</span> tree(tr, cap<span class="op">=</span>the.budget <span class="op">-</span> the.check) <span class="co"># 1 lab/leaf</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>  top <span class="op">=</span> <span class="bu">sorted</span>(rows[half:], key<span class="op">=</span><span class="kw">lambda</span> r: guess(tr, tt, r))</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">min</span>(top[:the.check],</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>             key<span class="op">=</span><span class="kw">lambda</span> r: disty(tr, r)), rows[half:], tr</span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> opt1(f): <span class="co"># one dataset: win of tree, rand, best picks</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  t <span class="op">=</span> Tbl(csv(f))</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  W <span class="op">=</span> wins(t)</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  treat, rand, best <span class="op">=</span> Num(), Num(), Num()</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">20</span>):</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    got, test, tr <span class="op">=</span> holdout(t)</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    Y <span class="op">=</span> <span class="kw">lambda</span> r: disty(tr, r)</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    add(treat, W(got))</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    add(rand,  W(<span class="bu">min</span>(some(test, the.budget), key<span class="op">=</span>Y)))</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    add(best,  W(<span class="bu">min</span>(test, key<span class="op">=</span>Y)))</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="st">&quot;</span><span class="sc">%-22s</span><span class="st"> </span><span class="sc">%5s</span><span class="st"> tree %4.0f rand %4.0f best %4.0f&quot;</span> <span class="op">%</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>        (f.split(<span class="st">&quot;/&quot;</span>)[<span class="op">-</span><span class="dv">1</span>][:<span class="dv">22</span>], <span class="bu">len</span>(t.rows),</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>         treat.mu, rand.mu, best.mu))</span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_opt():</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;optimize the 20 smallest moot data sets&quot;</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  fs <span class="op">=</span> <span class="bu">sorted</span>(glob.glob(</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">&quot;/Users/timm/gits/moot/optimize/**/*.csv&quot;</span>,</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>         recursive<span class="op">=</span><span class="va">True</span>), key<span class="op">=</span>os.path.getsize)[:<span class="dv">20</span>]</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>  stop0, the.stop <span class="op">=</span> the.stop, <span class="dv">10</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> f <span class="kw">in</span> fs: opt1(f)</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>  the.stop <span class="op">=</span> stop0</span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_opt1():</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;optimize just the.file (for parallel sweeps)&quot;</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  stop0, the.stop <span class="op">=</span> the.stop, <span class="dv">10</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  opt1(the.<span class="bu">file</span>)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>  the.stop <span class="op">=</span> stop0</span></code></pre></div>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_tree():</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">&quot;recursive contrast splits; leaves show row counts&quot;</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  show(tree(Tbl(csv(the.<span class="bu">file</span>))))</span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>eg <span class="op">=</span> {<span class="st">&quot;-&quot;</span> <span class="op">+</span> k[<span class="dv">5</span>:]: f <span class="cf">for</span> k, f <span class="kw">in</span> <span class="bu">globals</span>().items()</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> k.startswith(<span class="st">&quot;test_&quot;</span>)}</span></code></pre></div>
+<div class="sourceCode" id="cb58"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run(f): <span class="co"># reseed, call f, catch crashes</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>  seed(the.seed)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span>: f()</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">except</span> <span class="pp">Exception</span>: traceback.print_exc()</span></code></pre></div>
+<div class="sourceCode" id="cb59"><pre
+class="sourceCode py"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> j, s <span class="kw">in</span> <span class="bu">enumerate</span>(sys.argv):</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> f <span class="op">:=</span> eg.get(<span class="st">&quot;-&quot;</span> <span class="op">+</span> s.lstrip(<span class="st">&quot;-&quot;</span>)): run(f)</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> (k <span class="op">:=</span> s.lstrip(<span class="st">&quot;-&quot;</span>)) <span class="kw">in</span> the:</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>      the[k] <span class="op">=</span> atom(sys.argv[j <span class="op">+</span> <span class="dv">1</span>])</span></code></pre></div>
+</body>
+</html>
