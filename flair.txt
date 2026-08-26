@@ -1,0 +1,14 @@
+### SSOT
+SSOT = single source of truth. All the settings live in one
+place: the __doc__ string at top of file. The `the` variable
+is built by regular expression, pulling the flags and their
+defaults from the help text. So adding a new setting means
+editing one string; the code and its documentation can never
+disagree.
+
+### Config
+Settings are a dict that also answers attribute access
+(the.bins == the["bins"]). The command line updates them:
+any `--key value` pair whose key names a setting gets atom-ed
+and stored. Demos run via `-name` flags looked up in the `eg`
+table (built from globals: every test_* function is a demo).
