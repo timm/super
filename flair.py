@@ -50,8 +50,7 @@ def csv(file): # iterate a csv file's atom rows
 def Num(): return o(n=0, mu=0, m2=0)
 def Sym(): return {}
 def Col(s): return Num() if s[0].isupper() else Sym()
-def Tbl(src):
-  return adds(src, o(rows=[], cols=None, center=None))
+def Tbl(src): return adds(src, o(rows=[], cols=None, center=None))
 
 def clone(tbl,rows=[]): # make new  with same structure as tbl
   return Tbl( [tbl.cols.names]+rows )
