@@ -1,5 +1,9 @@
 #!/usr/bin/env python3 -B
 #HashBang
+# pyright: reportAttributeAccessIssue=false
+# pyright: reportSelfClsParameterName=false
+# pyright: reportOperatorIssue=false, reportArgumentType=false
+#StaticBugs
 """
 flair: contrast-set learner; fastmap halves + b^2/(b+r).
 (c) 2026 Tim Menzies <timm@ieee.org> MIT license
@@ -20,8 +24,8 @@ Options:
 import re, os, sys, glob, traceback
 from copy import copy
 from math import exp, log
-from random import seed, choice, sample
-from types import SimpleNamespace as SNs
+from random import seed, sample
+from types import SimpleNamespace
 import sys; sys.dont_write_bytecode = True
 #Nocache
 def shuffle(t): return sample(t, len(t)) # non-mutating
@@ -29,13 +33,13 @@ def shuffle(t): return sample(t, len(t)) # non-mutating
 BIG = 1e30
 
 def atom(s): # string --> number or stripped string
-  try: return int(s)
-  except ValueError:
-    try: return float(s)
-    except ValueError: return s.strip()
+  for f in [int,float]:
+    try: return f(s)
+    except ValueError: ...
+  return s.strip()
 
-the = SNs({k: atom(v)
-           for k, v in re.findall(r"(\w+)=(\S+)", __doc__)})
+the = SimpleNamespace({k: atom(v)
+           for k, v in re.findall(r"(\w+)=(\S+)", __doc__ or "")})
 
 def csv(file): # iterate a csv file's atom rows
   with open(file) as f:
@@ -43,11 +47,8 @@ def csv(file): # iterate a csv file's atom rows
       if s := s.strip():
         yield [atom(x) for x in s.split(",")]
 
-def some(t, n): # n random picks from list t
-  return [choice(t) for _ in range(min(n, len(t)))]
-
 # --- struct: instances copy class defaults; xKlass --> Klass.x
-class o(SNs):
+class o(SimpleNamespace):
   def __init__(i, **k):
     super().__init__(**{a: copy(v) for a, v in
                         vars(type(i)).items()
@@ -56,17 +57,13 @@ class o(SNs):
     f = lambda v: round(v, the.places) if type(v) is float else v
     return str({k:f(v) for k, v in vars(i).items() if k[0]!="_"})
 
-def meths(g): # def addNum(i,..) --> Num.add
-  for k, f in list(g.items()):
-    if x := re.fullmatch(r'([a-z]+)([A-Z]\w*)', k):
-      setattr(g[x[2]], x[1], f)
 
 # --- create -----------------------------------------------------
-class Num(o): n=0; mu=0; m2=0
-class Sym(dict): pass
-class Tbl(o): rows=[]; cols=None; center=None
-
 def Col(s): return (Num if s[0].isupper() else Sym)()
+
+class Num(o): n=0; mu=0; m2=0
+class Sym(o): has={}
+class Tbl(o): rows=[]; cols=None; center=None
 
 class Cols(o): # names --> columns grouped into x,y
   def __init__(i, names):
@@ -82,12 +79,12 @@ def clone(tbl, rows=[]): # new table, same structure as tbl
   return adds([tbl.cols.names] + rows, Tbl())
 
 # --- add: update ------------------------------------------------
-def adds(src, i=None): # add all from any iterable
-  i = i or Num()
-  for x in src: i.add(x)
-  return i
+def adds(src, it=None): # add all from any iterable
+  it = it or Num()
+  for x in src: it.add(x)
+  return it
 
-def addSym(i, v, w=1): i[v] = w + i.get(v, 0)
+def addSym(i, v, w=1): i.has[v] = w + i.has.get(v, 0)
 
 def addCols(i, v, w=1):
   [c.add(x, w) for c, x in zip(i.all, v) if x != "?"]
@@ -100,7 +97,7 @@ def addNum(i, v, w=1):
     i.mu += w*d/i.n
     i.m2 += w*d*(v - i.mu)
 
-def subNum(i, j): # Num for "everything in i but not j"
+def __sub__Num(i, j): # Num for "everything in i but not j"
   n = i.n - j.n
   if n <= 0: return Num()
   d = j.mu - i.mu
@@ -115,7 +112,7 @@ def addTbl(i, v, w=1):
   else: i.cols = Cols(v)
 
 # --- mid, div: central tendency, diversity ----------------------
-def midSym(i): return max(i, key=i.get)
+def midSym(i): return max(i.has, key=i.has.get)
 def midNum(i): return i.mu
 
 def midTbl(i): # JIT center
@@ -126,8 +123,8 @@ def divNum(i): # standard deviation
   return 0 if i.n < 2 else (i.m2/(i.n - 1))**0.5
 
 def divSym(i): # entropy
-  n = sum(i.values())
-  return -sum(v/n*log(v/n, 2) for v in i.values() if v > 0)
+  n = sum(i.has.values())
+  return -sum(v/n*log(v/n, 2) for v in i.has.values() if v > 0)
 
 def normNum(i, v): # value --> 0..1, logistic cdf, memoized
   if v == "?": return v
@@ -153,30 +150,29 @@ def distxTbl(i, r1, r2): # x-column distance
   return (d/n)**(1/the.p)
 
 def distyTbl(i, row): # d2h: distance of goals to best corner
-  d, n = 0, 1/BIG
-  for at, w in i.cols.y.items():
-    v = i.cols.all[at].norm(row[at])
-    if v != "?":
-      n += 1; d += abs(v - w)**the.p
-  return (d/n)**(1/the.p)
+  d = sum(abs(i.cols.all[at].norm(row[at]) - w)**the.p
+          for at, w in i.cols.y.items())
+  return (d/len(i.cols.y))**(1/the.p)
 
 # --- cut: min expected variance splits --------------------------
 class Span(o): pass # one cut: at, v, col, txt, anti
 
 def selectsSpan(i, row): # does row go down the yes side?
-  return i.col.has(row[i.at], i.v)
+  return i.col.matches(row[i.at], i.v)
 
-def hasSym(i, x, v): return x == "?" or x == v
-def hasNum(i, x, v): return x == "?" or x <= v
+def matchesSym(i, x, v): return x == "?" or x == v
+def matchesNum(i, x, v): return x == "?" or x <= v
 
-def score(a, b): # expected diversity after a split
-  return (a.div()*a.n + b.div()*b.n)/(a.n + b.n + 1/BIG)
+def scoreNum(i, j): # expected diversity after an i|j split
+  return (i.div()*i.n + j.div()*j.n)/(i.n + j.n + 1/BIG)
 
 def cutsSym(i, xy, tot): # (score,v) per symbol
   d = {}
-  for x, y in xy: d.setdefault(x, Num()).add(y)
+  for x, y in xy: 
+    if x not in d: d[x] = Num()
+    d[x].add(y)
   if len(d) > 1:
-    for v, lhs in d.items(): yield score(lhs, tot - lhs), v
+    for v, lhs in d.items(): yield lhs.score(tot - lhs), v
 
 def cutsNum(i, xy, tot): # (score,v) per boundary, one sweep
   xy.sort()
@@ -184,7 +180,7 @@ def cutsNum(i, xy, tot): # (score,v) per boundary, one sweep
   for j, (x, y) in enumerate(xy):
     lhs.add(y)
     if j + 1 < len(xy) and x != xy[j+1][0]:
-      yield score(lhs, tot - lhs), x
+      yield lhs.score(tot - lhs), x
 
 def cutsTbl(i, rows, Y): # candidate (score,at,v), all x cols
   for at in i.cols.x:
@@ -203,20 +199,18 @@ def cutTbl(i, rows, Y): # best cut, as a self-labeling Span
 # --- tree -------------------------------------------------------
 class Tree(o): n=0; rows=[]; cut=None
 
-def treeTbl(i, cap=BIG): # grow subtrees, at most cap leaves
-  Y, n = (lambda r: i.disty(r)), [1]
-  def grow(rows):
-    node = Tree(n=len(rows), rows=rows)
-    if len(rows) > the.stop and n[0] < cap:
-      if z := i.cut(rows, Y):
-        yes = [r for r in rows if z.selects(r)]
-        no  = [r for r in rows if not z.selects(r)]
-        if 0 < len(yes) < len(rows):
-          n[0] += 1
-          node.cut = z
-          node.yes, node.no = grow(yes), grow(no)
-    return node
-  return grow(i.rows)
+def treeTbl(i, rows=None, Y=None): # min-variance splits
+  rows = rows or i.rows
+  Y = Y or (lambda r: i.disty(r))
+  node = Tree(n=len(rows), rows=rows)
+  if len(rows) > the.stop:
+    if z := i.cut(rows, Y):
+      yes, no = [], []
+      for r in rows: (yes if z.selects(r) else no).append(r)
+      if yes and no:
+        node.cut = z
+        node.yes, node.no = i.tree(yes, Y), i.tree(no, Y)
+  return node
 
 def leavesTree(i): # how many leaves below here?
   return i.yes.leaves() + i.no.leaves() if i.cut else 1
@@ -241,8 +235,24 @@ def showTree(i, pre=None, txt=""): # print tree; n at left
     i.yes.show(sub, i.cut.txt)
     i.no.show(sub, i.cut.anti)
 
-meths(globals())
-Num.__sub__ = Num.sub
+# --- misc ------------------------------------------------------
+def some(t, n): # n random picks from list t, no repeats
+  return sample(t, min(n, len(t)))
+
+def wins(t, rows=None): # grader: row --> % of gap closed
+  ys = sorted(t.disty(r) for r in rows or t.rows)
+  lo, b4 = ys[0], sum(ys)/len(ys)
+  return lambda r: max(-100, min(100,
+    100*(1 - (t.disty(r) - lo)/(b4 - lo + 1/BIG))))
+
+def holdout(t): # model built on half ranks the other half
+  rows = shuffle(t.rows)
+  half = len(rows)//2
+  tr = clone(t, rows[:half][:the.lots])
+  tt = tr.tree()
+  top = sorted(rows[half:], key=lambda r: tt.guess(tr, r))
+  return min(top[:the.check],
+             key=lambda r: tr.disty(r)), rows[half:], tr
 
 # --- demos ------------------------------------------------------
 def test_list():
@@ -315,21 +325,6 @@ def test_err():
           (f.split("/")[-1][:22], len(t.rows), nleaf.mu,
            100*err.mu, 100*err.div()))
 
-def wins(t, rows=None): # grader: row --> % of gap closed
-  ys = sorted(t.disty(r) for r in rows or t.rows)
-  lo, b4 = ys[0], sum(ys)/len(ys)
-  return lambda r: max(-100, min(100,
-    100*(1 - (t.disty(r) - lo)/(b4 - lo + 1/BIG))))
-
-def holdout(t): # model built on half ranks the other half
-  rows = shuffle(t.rows)
-  half = len(rows)//2
-  tr = clone(t, rows[:half][:the.lots])
-  tt = tr.tree(cap=the.budget - the.check) # 1 lab/leaf
-  top = sorted(rows[half:], key=lambda r: tt.guess(tr, r))
-  return min(top[:the.check],
-             key=lambda r: tr.disty(r)), rows[half:], tr
-
 def opt1(f): # one dataset: win of tree, rand, best picks
   t = adds(csv(f), Tbl())
   W = wins(t)
@@ -362,6 +357,15 @@ def test_opt1():
 def test_tree():
   "recursive contrast splits; leaves show row counts"
   adds(csv(the.file), Tbl()).tree().show()
+
+# --- main ------------------------------------------------------
+def meths(g): # def addNum(i,..) --> Num.add
+  for k, f in list(g.items()):
+    if x := re.fullmatch(r'([a-z_]+)([A-Z]\w*)', k):
+      setattr(g[x[2]], x[1], f)
+      del g[k]
+
+meths(globals())
 
 eg = {"-" + k[5:]: f for k, f in globals().items()
       if k.startswith("test_")}
