@@ -21,6 +21,14 @@ opt1s: ## What -opt1 on every Data csv; sorted, wrapped
 ~/tmp/contrast.txt: ## save the sorted xargs run here
 	@$(MAKE) -s xargs | tee $@
 
+~/tmp/%.py.pdf: %.py ## .py ==> .pdf (make ~/tmp/x.py.pdf)
+	@mkdir -p ~/tmp
+	@echo "pdf-ing $@ ..."
+	@a2ps -BrEpython --chars-per-line=70 --file-align=fill \
+	  --line-numbers=1 --borders=no --pro=color --columns=2 \
+	  -M letter -o - $< | ps2pdf - $@
+	@open $@
+
 ~/tmp/%.lua.pdf: %.lua ## .lua ==> .pdf (make ~/tmp/x.lua.pdf)
 	@mkdir -p ~/tmp
 	@echo "pdf-ing $@ ..."

@@ -104,7 +104,7 @@ def norm(c, v): # Num value --> 0..1, logistic cdf
   z = (v - c.mu)/(c.sd + 1/BIG)
   return 1/(1 + exp(-1.7*max(-3, min(3, z))))
 
-# --- dist: distance ---------------------------------------------
+# --- dist: distance ---------------------------------------------
 def dist(c, a, b): # one column's distance
   if a == "?" and b == "?": return 1
   if c.it is Sym: return a != b
@@ -155,7 +155,7 @@ def descends(t, rows): # descents, restart till budget spent
       break                                    # no progress
   return sorted(lab.values(), key=y)
 
-# --- cut: min expected variance splits --------------------------
+# --- cut: min expected variance splits --------------------------
 def matches(c, x, v): # does x fall on the yes side of cut v?
   return x == "?" or (x == v if c.it is Sym else x <= v)
 
@@ -248,7 +248,7 @@ def show(i, t): # y-col mids per node; +/- best,worst leaf
           for n, txt in ns],
          "<>>" + ">"*len(t.cols.y))
 
-# --- misc ------------------------------------------------------
+# --- misc ------------------------------------------------------
 def some(t, n): # n random picks from list t, no repeats
   return sample(t, min(n, len(t)))
 
@@ -315,7 +315,7 @@ def ks(xs, ys, a=1.36): # sorted xs,ys: 95% kolmogorov-smirnov
     d = max(d, abs(i/n - j/m))
   return d <= a*((n + m)/(n*m))**0.5
 
-# --- demos ------------------------------------------------------
+# --- demos ------------------------------------------------------
 def test_list():
   "show the demos"
   for k, f in eg.items():
