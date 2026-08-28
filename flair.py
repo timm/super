@@ -38,8 +38,8 @@ def atom(s): # string --> number or stripped string
     except ValueError: ...
   return s.strip()
 
-the = Box(**{k: atom(v)
-             for k, v in re.findall(r"(\w+)=(\S+)", __doc__ or "")})
+the = Box(**{k: atom(v) for k, v in
+             re.findall(r"(\w+)=(\S+)", __doc__ or "")})
 
 def csv(file): # iterate a csv file's atom rows
   with open(file) as f:
@@ -47,7 +47,7 @@ def csv(file): # iterate a csv file's atom rows
       if s := s.strip():
         yield [atom(x) for x in s.split(",")]
 
-# --- create: all types are a Box, tagged by their maker ---------
+# --- create: all types are a Box, tagged by their maker -------
 def Num():  return Box(it=Num, n=0, mu=0, m2=0, sd=0)
 def Sym():  return Box(it=Sym, n=0, has={})
 def Col(s): return (Num if s[0].isupper() else Sym)()
@@ -66,7 +66,7 @@ def Cols(names): # names --> columns grouped into x,y
 def clone(tbl, rows=[]): # new table, same structure as tbl
   return adds([tbl.cols.names] + rows, Tbl())
 
-# --- add: update ------------------------------------------------
+# --- add: update -----------------------------------------------
 def adds(src, it=None): # add all from any iterable
   it = it or Num()
   for x in src: add(it, x)
@@ -88,9 +88,10 @@ def add(i, v, w=1): # update any box; w=-1 is deletion
       i.m2 = max(0, i.m2 + w*d*(v - i.mu))
       i.sd = 0 if i.n < 2 else (i.m2/(i.n - 1))**0.5
 
-# --- mid, div: central tendency, diversity ----------------------
+# --- mid, div: central tendency, diversity ---------------------
 def mid(col): # Num: mean. Sym: mode
-  return col.mu if col.it is Num else max(col.has,key=col.has.get)
+  return (col.mu if col.it is Num else
+          max(col.has, key=col.has.get))
 
 def mids(tbl): return [mid(col) for col in tbl.cols.all]
 
@@ -103,7 +104,7 @@ def norm(num, v): # Num value --> 0..1, logistic cdf
   z = (v - num.mu)/(num.sd + 1/BIG)
   return 1/(1 + exp(-1.7*max(-3, min(3, z))))
 
-# --- dist: distance ---------------------------------------------
+# --- dist: distance -------------------------------------------
 def _dist(col, a, b): # one column's distance
   if a == "?" and b == "?": return 1
   if col.it is Sym: return a != b
@@ -128,7 +129,7 @@ def ymids(tbl, rows): # mids of the y columns, in these rows
   return [mid(adds((r[at] for r in rows if r[at] != "?"),
                    tbl.cols.all[at].it())) for at in tbl.cols.y]
 
-# --- descend: label a few rows, cull toward the good pole -------
+# --- descend: label a few rows, cull toward the good pole ------
 def poles(tbl, rows, y): # far pair in rows; best-->worst axis
   far = lambda r: max(rows, key=lambda x: distx(tbl, x, r))
   a = far(rows[0]); z = far(a)
@@ -158,7 +159,7 @@ def descends(tbl, rows, label=lambda row: row):
     if len(lab) == n: break                    # no progress
   return sorted(lab.values(), key=y)
 
-# --- cut: min expected variance splits --------------------------
+# --- cut: min expected variance splits ------------------------
 def matches(col, x, v): # does x fall on the yes side of cut v?
   return x == "?" or (x == v if col.it is Sym else x <= v)
 
@@ -198,7 +199,7 @@ def cutTbl(tbl, rows, y, acc=Num): # best cut, as a labeled Span
     return Box(it=cutTbl, at=at, v=v, col=c,
                txt=f"{s} {eq} {v}", anti=f"{s} {ne} {v}")
 
-# --- tree -------------------------------------------------------
+# --- tree -----------------------------------------------------
 def Tree(**d):
   return Box(**dict(it=Tree, n=0, rows=[], cut=None,
                     ys=None, leafs=1) | d)
@@ -245,14 +246,15 @@ def showTree(tree, tbl): # y-col mids per node; +/- bad,best leaf
   leafs = [n for n, _ in ns if not n.cut]
   best  = min(leafs, key=lambda n: mid(n.ys))
   worst = max(leafs, key=lambda n: mid(n.ys))
-  mark  = lambda n: "+" if n is best else "-" if n is worst else ""
+  mark  = lambda n: ("+" if n is best else
+                     "-" if n is worst else "")
   printm([["", "d2h", "n",
            *[tbl.cols.names[at] for at in tbl.cols.y], ""]] +
          [[mark(n), mid(n.ys), n.n, *ymids(tbl, n.rows), txt]
           for n, txt in ns],
          "<>>" + ">"*len(tbl.cols.y))
 
-# --- misc ------------------------------------------------------
+# --- misc -----------------------------------------------------
 def shuffle(t): return sample(t, len(t)) # non-mutating
 
 def some(t, n): # n random picks from list t, no repeats
@@ -294,7 +296,7 @@ def holdout(t): # train: half, capped at lots. test: the rest
   return min(top[:the.check],
              key=lambda r: disty(tr, r)), rows[n:], tr
 
-# --- stats: are two samples of numbers the same? ----------------
+# --- stats: are two samples of numbers the same? --------------
 def cohen(xs, ys, d=0.35): # mean gap small, in pooled sd units
   x, y = adds(xs), adds(ys)
   sd = (((x.n-1)*x.sd**2 + (y.n-1)*y.sd**2)/(x.n+y.n-2))**0.5
@@ -328,7 +330,7 @@ def top(d, reverse=False): # names statistically tied with best
   while j+1 < len(xs) and same(xs[0][1], xs[j+1][1]): j += 1
   return {k for k, _ in xs[:j+1]}
 
-# --- demos ------------------------------------------------------
+# --- demos ----------------------------------------------------
 def test_list():
   "show the demos"
   for k, f in eg.items():
@@ -369,7 +371,7 @@ def test_cuts():
   s, at, v = min(cutsTbl(t, t.rows, lambda r: disty(t, r)))
   print(t.cols.names[at], "at", v, "score %.3f" % s)
 
-def errs(t, tr, tt, rows): # prediction errors, one holdout
+def errs(t, tr, tt, rows): # prediction errors, one holdout
   return ((abs(guess(tt, tr, r) - disty(tr, r))
            for r in rows))
 
@@ -402,7 +404,7 @@ def test_err():
           (f.split("/")[-1][:22], len(t.rows), nleaf.mu,
            100*err.mu, 100*err.sd))
 
-def opt1(f): # one dataset: win of tree, rand, best picks
+def opt1(f): # one dataset: win of tree, rand, best picks
   t = adds(csv(f), Tbl())
   w = wins(t)
   ts, rs, bs = [], [], []
@@ -452,7 +454,7 @@ def test_klass():
                  for r in rows[n:])/(len(rows) - n))
   print("accuracy mu %.2f sd %.2f" % (acc.mu, acc.sd))
 
-# --- main ------------------------------------------------------
+# --- main -----------------------------------------------------
 eg = {"-" + k[5:]: f for k, f in globals().items()
       if k.startswith("test_")}
 
