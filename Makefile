@@ -11,6 +11,13 @@ xargs: ## run What+Flag on every Data csv, Cpu at a time
 	@find $(Data) -name '*.csv' | \
 	xargs -P $(Cpu) -n 1 -I{} python3 $(What) --file {} $(Flag)
 
+opt1s: What=flair.py
+opt1s: ## What -opt1 on every Data csv; sorted, wrapped
+	@$(MAKE) -s xargs What=$(What) Flag=-opt1 | sort -n | fmt -60
+
+~/tmp/flair.txt: ## save an opt1s run here
+	@$(MAKE) -s opt1s | tee $@
+
 ~/tmp/contrast.txt: ## save the sorted xargs run here
 	@$(MAKE) -s xargs | tee $@
 
