@@ -4,7 +4,7 @@
 # pyright: reportOperatorIssue=false, reportArgumentType=false
 #StaticBugs
 """
-flair: contrast-set learner; fastmap halves + b^2/(b+r).
+flair: explainable multi-objective active learning
 (c) 2026 Tim Menzies <timm@ieee.org> MIT license
 
 Options:
@@ -29,7 +29,6 @@ from random import seed, sample
 from types import SimpleNamespace as Box
 import sys; sys.dont_write_bytecode = True
 #Nocache
-def shuffle(t): return sample(t, len(t)) # non-mutating
 
 BIG = 1e30
 
@@ -90,79 +89,84 @@ def add(i, v, w=1): # update any box; w=-1 is deletion
       i.sd = 0 if i.n < 2 else (i.m2/(i.n - 1))**0.5
 
 # --- mid, div: central tendency, diversity ----------------------
-def mid(c): # Num: mean. Sym: mode
-  return c.mu if c.it is Num else max(c.has, key=c.has.get)
+def mid(col): # Num: mean. Sym: mode
+  return col.mu if col.it is Num else max(col.has,key=col.has.get)
 
-def mids(t): return [mid(c) for c in t.cols.all] # centroid
+def mids(tbl): return [mid(col) for col in tbl.cols.all]
 
-def div(c): # Num: sd. Sym: entropy (v>0: deletions leave 0s)
-  return c.sd if c.it is Num else \
-    -sum(v/c.n*log(v/c.n, 2) for v in c.has.values() if v > 0)
+def div(col): # Num: sd. Sym: entropy (v>0 dodges deletions)
+  return col.sd if col.it is Num else \
+    -sum(v/col.n*log(v/col.n,2) for v in col.has.values() if v>0)
 
-def norm(c, v): # Num value --> 0..1, logistic cdf
+def norm(num, v): # Num value --> 0..1, logistic cdf
   if v == "?": return v
-  z = (v - c.mu)/(c.sd + 1/BIG)
+  z = (v - num.mu)/(num.sd + 1/BIG)
   return 1/(1 + exp(-1.7*max(-3, min(3, z))))
 
 # --- dist: distance ---------------------------------------------
-def dist(c, a, b): # one column's distance
+def _dist(col, a, b): # one column's distance
   if a == "?" and b == "?": return 1
-  if c.it is Sym: return a != b
-  a, b = norm(c, a), norm(c, b)
+  if col.it is Sym: return a != b
+  a, b = norm(col, a), norm(col, b)
   if a == "?": a = 1 if b < 0.5 else 0
   if b == "?": b = 1 if a < 0.5 else 0
   return abs(a - b)
 
-def distx(t, r1, r2): # x-column distance
+def distx(tbl, r1, r2): # x-column distance
   d, n = 0, 1/BIG
-  for at in t.cols.x:
+  for at in tbl.cols.x:
     n += 1
-    d += dist(t.cols.all[at], r1[at], r2[at])**the.p
+    d += _dist(tbl.cols.all[at], r1[at], r2[at])**the.p
   return (d/n)**(1/the.p)
 
-def disty(t, row): # d2h: distance of goals to best corner
-  d = sum(abs(norm(t.cols.all[at], row[at]) - w)**the.p
-          for at, w in t.cols.y.items())
-  return (d/len(t.cols.y))**(1/the.p)
+def disty(tbl, row): # d2h: distance of goals to best corner
+  d = sum(abs(norm(tbl.cols.all[at], row[at]) - w)**the.p
+          for at, w in tbl.cols.y.items())
+  return (d/len(tbl.cols.y))**(1/the.p)
 
-def ymids(t, rows): # mids of the y columns, in these rows
+def ymids(tbl, rows): # mids of the y columns, in these rows
   return [mid(adds((r[at] for r in rows if r[at] != "?"),
-                   t.cols.all[at].it())) for at in t.cols.y]
+                   tbl.cols.all[at].it())) for at in tbl.cols.y]
 
 # --- descend: label a few rows, cull toward the good pole -------
-def poles(t, rows, y): # far pair in rows; best-->worst axis
-  far = lambda r: max(rows, key=lambda x: distx(t, x, r))
+def poles(tbl, rows, y): # far pair in rows; best-->worst axis
+  far = lambda r: max(rows, key=lambda x: distx(tbl, x, r))
   a = far(rows[0]); z = far(a)
   if y(z) < y(a): a, z = z, a
-  c = distx(t, a, z) + 1/BIG
-  return lambda r: (distx(t,a,r)**2 + c*c - distx(t,z,r)**2)/(2*c)
+  c = distx(tbl, a, z) + 1/BIG
+  return lambda r: (distx(tbl,a,r)**2 + c*c -
+                    distx(tbl,z,r)**2)/(2*c)
 
-def descend(t, rows, y, lab): # one greedy descent
-  cap = the.budget - the.check
-  while len(rows) > the.stop and len(lab) < cap:
-    alive, more = [], min(the.more, cap - len(lab))
-    for r in rows:
-      if id(r) in lab: alive += [r]
-      elif more > 0  : alive += [r]; more -= 1; lab[id(r)] = r
-    rows = sorted(rows, key=poles(t, alive, y))
-    rows = rows[:int(the.best*len(rows))]
-  return lab
+def descends(tbl, rows, label=lambda row: row):
+  def descend(rows): # one greedy descent along project
+    while len(rows) > the.stop and len(lab) < cap:
+      todo, more = [], min(the.more, cap - len(lab))
+      for r in rows:
+        if id(r) in lab: todo += [lab[id(r)]]
+        elif more > 0:
+          more -= 1; lab[id(r)] = label(r); todo += [lab[id(r)]]
+      rows = sorted(rows, key=project(todo))
+      rows = rows[:int(the.best*len(rows))]
 
-def descends(t, rows): # descents, restart till budget spent
-  y, lab = (lambda r: disty(t, r)), {}
-  while len(lab) < the.budget - the.check:
-    if len(lab) == len(descend(t, shuffle(rows), y, lab)):
-      break                                    # no progress
+  y       = lambda r: disty(tbl, r)
+  project = lambda rows: poles(tbl, rows, y)
+  lab     = {}
+  cap     = the.budget - the.check
+  while len(lab) < cap:
+    n = len(lab)
+    descend(shuffle(rows))
+    if len(lab) == n: break                    # no progress
   return sorted(lab.values(), key=y)
 
 # --- cut: min expected variance splits --------------------------
-def matches(c, x, v): # does x fall on the yes side of cut v?
-  return x == "?" or (x == v if c.it is Sym else x <= v)
+def matches(col, x, v): # does x fall on the yes side of cut v?
+  return x == "?" or (x == v if col.it is Sym else x <= v)
 
 def selects(z, row): return matches(z.col, row[z.at], z.v)
 
-def score(a, b): # expected diversity after an a|b split
-  return (div(a)*a.n + div(b)*b.n)/(a.n + b.n + 1/BIG)
+def score(col1, col2): # expected diversity of col1|col2 split
+  n1, n2 = col1.n, col2.n
+  return (div(col1)*n1 + div(col2)*n2)/(n1 + n2 + 1/BIG)
 
 def cutsSym(xy, tot, acc): # (score,v): yes = one symbol
   for v in dict.fromkeys(x for x, _ in xy):
@@ -178,20 +182,20 @@ def cutsNum(xy, tot, acc): # (score,v) per bound, one sweep
     if j + 1 < len(xy) and x != xy[j+1][0]:
       yield score(lhs, tot), x
 
-def cuts(t, rows, Y, acc=Num): # (score,at,v), all x cols
-  for at in t.cols.x:
-    xy  = [(r[at], Y(r)) for r in rows if r[at] != "?"]
+def cutsTbl(tbl, rows, y, acc=Num): # (score,at,v), all x cols
+  for at in tbl.cols.x:
+    xy  = [(r[at], y(r)) for r in rows if r[at] != "?"]
     tot = adds((y for _, y in xy), acc())
-    f   = cutsNum if t.cols.all[at].it is Num else cutsSym
+    f   = cutsNum if tbl.cols.all[at].it is Num else cutsSym
     for s, v in f(xy, tot, acc):
       yield s, at, v
 
-def cut(t, rows, Y, acc=Num): # best cut, as a labeled Span
-  if z := min(cuts(t, rows, Y, acc), default=None):
+def cutTbl(tbl, rows, y, acc=Num): # best cut, as a labeled Span
+  if z := min(cutsTbl(tbl, rows, y, acc), default=None):
     _, at, v = z
-    c, s = t.cols.all[at], t.cols.names[at]
+    c, s = tbl.cols.all[at], tbl.cols.names[at]
     eq, ne = ("==", "!=") if c.it is Sym else ("<=", ">")
-    return Box(it=cut, at=at, v=v, col=c,
+    return Box(it=cutTbl, at=at, v=v, col=c,
                txt=f"{s} {eq} {v}", anti=f"{s} {ne} {v}")
 
 # --- tree -------------------------------------------------------
@@ -199,56 +203,58 @@ def Tree(**d):
   return Box(**dict(it=Tree, n=0, rows=[], cut=None,
                     ys=None, leafs=1) | d)
 
-def tree(t, Y=None, acc=Num): # min-variance splits
-  Y = Y or (lambda r: disty(t, r))
-  def grow(rows):
-    node = Tree(n=len(rows),rows=rows,ys=adds(map(Y,rows),acc()))
+def growTree(tbl, y=None, acc=Num): # min-variance splits
+  y = y or (lambda r: disty(tbl, r))
+  def recurse(rows):
+    node = Tree(n=len(rows),rows=rows,ys=adds(map(y,rows),acc()))
     if len(rows) > the.stop:
-      if z := cut(t, rows, Y, acc):
+      if z := cutTbl(tbl, rows, y, acc):
         yes, no = [], []
         for r in rows: (yes if selects(z, r) else no).append(r)
         if yes and no:
-          node.cut, node.yes, node.no = z, grow(yes), grow(no)
+          node.cut,node.yes,node.no = z,recurse(yes),recurse(no)
           node.leafs = node.yes.leafs + node.no.leafs
     return node
-  return grow(t.rows)
+  return recurse(tbl.rows)
 
-def leaf(i, row): # walk row down to its leaf
-  while i.cut:
-    i = i.yes if selects(i.cut, row) else i.no
-  return i
+def leaf(tree, row): # walk row down to its leaf
+  while tree.cut:
+    tree = tree.yes if selects(tree.cut, row) else tree.no
+  return tree
 
-def predict(i, row): # leaf's mode (Sym) or mean (Num)
-  return mid(leaf(i, row).ys)
+def predict(tree, row): # leaf's mode (Sym) or mean (Num)
+  return mid(leaf(tree, row).ys)
 
-def guess(i, t, row): # d2h of leaf row nearest to mids
-  l = leaf(i, row)
+def guess(tree, tbl, row): # d2h of leaf row nearest to mids
+  l = leaf(tree, row)
   if not hasattr(l, "est"):
-    c = mids(clone(t, l.rows))
-    l.est = disty(t, min(some(l.rows, the.few),
-                         key=lambda r: distx(t, r, c)))
+    c = mids(clone(tbl, l.rows))
+    l.est = disty(tbl, min(some(l.rows, the.few),
+                           key=lambda r: distx(tbl, r, c)))
   return l.est
 
-def nodes(i, pre=None, txt=""): # walk: (node, indented txt)
-  yield i, (pre or "") + txt
-  if i.cut:
+def nodes(tree, pre=None, txt=""): # walk: (node, indented txt)
+  yield tree, (pre or "") + txt
+  if tree.cut:
     sub = "" if pre is None else pre + "|  "
-    yield from nodes(i.yes, sub, i.cut.txt)
-    yield from nodes(i.no,  sub, i.cut.anti)
+    yield from nodes(tree.yes, sub, tree.cut.txt)
+    yield from nodes(tree.no,  sub, tree.cut.anti)
 
-def show(i, t): # y-col mids per node; +/- best,worst leaf
-  ns    = list(nodes(i))
+def showTree(tree, tbl): # y-col mids per node; +/- bad,best leaf
+  ns    = list(nodes(tree))
   leafs = [n for n, _ in ns if not n.cut]
   best  = min(leafs, key=lambda n: mid(n.ys))
   worst = max(leafs, key=lambda n: mid(n.ys))
   mark  = lambda n: "+" if n is best else "-" if n is worst else ""
   printm([["", "d2h", "n",
-           *[t.cols.names[at] for at in t.cols.y], ""]] +
-         [[mark(n), mid(n.ys), n.n, *ymids(t, n.rows), txt]
+           *[tbl.cols.names[at] for at in tbl.cols.y], ""]] +
+         [[mark(n), mid(n.ys), n.n, *ymids(tbl, n.rows), txt]
           for n, txt in ns],
-         "<>>" + ">"*len(t.cols.y))
+         "<>>" + ">"*len(tbl.cols.y))
 
 # --- misc ------------------------------------------------------
+def shuffle(t): return sample(t, len(t)) # non-mutating
+
 def some(t, n): # n random picks from list t, no repeats
   return sample(t, min(n, len(t)))
 
@@ -281,16 +287,12 @@ def holdout(t): # train: half, capped at lots. test: the rest
   rows = shuffle(t.rows)
   n = len(rows)//2
   tr = clone(t, descends(t, rows[:n][:the.lots]))
-  tt = tree(tr)
+  tt = growTree(tr)
   est = ((lambda r: predict(tt, r)) if the.est == "mean"
          else lambda r: guess(tt, tr, r))
   top = sorted(rows[n:], key=est)
   return min(top[:the.check],
              key=lambda r: disty(tr, r)), rows[n:], tr
-
-def same(xs, ys): # indistinguishable by all three tests
-  xs, ys = sorted(xs), sorted(ys)
-  return cliffs(xs, ys) and ks(xs, ys) and cohen(xs, ys)
 
 # --- stats: are two samples of numbers the same? ----------------
 def cohen(xs, ys, d=0.35): # mean gap small, in pooled sd units
@@ -314,6 +316,17 @@ def ks(xs, ys, a=1.36): # sorted xs,ys: 95% kolmogorov-smirnov
     while j < m and ys[j] <= v: j += 1
     d = max(d, abs(i/n - j/m))
   return d <= a*((n + m)/(n*m))**0.5
+
+def same(xs, ys): # indistinguishable by all three tests
+  xs, ys = sorted(xs), sorted(ys)
+  return cliffs(xs, ys) and ks(xs, ys) and cohen(xs, ys)
+
+def top(d, reverse=False): # names statistically tied with best
+  mu = lambda a: sum(a)/len(a)
+  xs = sorted(d.items(),key=lambda kv:mu(kv[1]), reverse=reverse)
+  j = 0
+  while j+1 < len(xs) and same(xs[0][1], xs[j+1][1]): j += 1
+  return {k for k, _ in xs[:j+1]}
 
 # --- demos ------------------------------------------------------
 def test_list():
@@ -353,7 +366,7 @@ def test_csv():
 def test_cuts():
   "best (least variance) cut of full table"
   t = adds(csv(the.file), Tbl())
-  s, at, v = min(cuts(t, t.rows, lambda r: disty(t, r)))
+  s, at, v = min(cutsTbl(t, t.rows, lambda r: disty(t, r)))
   print(t.cols.names[at], "at", v, "score %.3f" % s)
 
 def errs(t, tr, tt, rows): # prediction errors, one holdout
@@ -367,7 +380,7 @@ def test_predict():
     rows = shuffle(t.rows)
     n = len(rows)*2//3
     tr = clone(t, rows[:n])
-    adds(errs(t, tr, tree(tr), rows[n:]), err)
+    adds(errs(t, tr, growTree(tr), rows[n:]), err)
   print("err mu %.3f sd %.3f" % (err.mu, err.sd))
 
 def test_err():
@@ -382,7 +395,7 @@ def test_err():
       rows = shuffle(t.rows)
       n = len(rows)*2//3
       tr = clone(t, rows[:n])
-      tt = tree(tr)
+      tt = growTree(tr)
       add(nleaf, tt.leafs)
       adds(errs(t, tr, tt, rows[n:]), err)
     print("%-22s %5s %4.0f err %2.0f (%2.0f)" %
@@ -391,14 +404,14 @@ def test_err():
 
 def opt1(f): # one dataset: win of tree, rand, best picks
   t = adds(csv(f), Tbl())
-  W = wins(t)
+  w = wins(t)
   ts, rs, bs = [], [], []
   for _ in range(20):
     got, test, tr = holdout(t)
-    Y = lambda r: disty(tr, r)
-    ts += [W(got)]
-    rs += [W(min(some(test, the.budget), key=Y))]
-    bs += [W(min(test, key=Y))]
+    y = lambda r: disty(tr, r)
+    ts += [w(got)]
+    rs += [w(min(some(test, the.budget), key=y))]
+    bs += [w(min(test, key=y))]
   treat, rand, best = adds(ts), adds(rs), adds(bs)
   d = 0 if same(ts, rs) else treat.mu - rand.mu
   print("%-22s %5s tree %4.0f rand %4.0f best %4.0f diff %4.0f"
@@ -423,19 +436,19 @@ def test_opt1():
 def test_tree():
   "recursive contrast splits; leaves show row counts"
   t = adds(csv(the.file), Tbl())
-  show(tree(t), t)
+  showTree(growTree(t), t)
 
 def test_klass():
   "classify diabetes: accuracy of a klass tree, 5 holdouts"
   t = adds(csv("/Users/timm/gits/moot/classify/diabetes.csv"),
            Tbl())
-  Y = lambda r: r[t.cols.klass]
+  y = lambda r: r[t.cols.klass]
   acc = Num()
   for _ in range(5):
     rows = shuffle(t.rows)
     n = len(rows)*2//3
-    tt = tree(clone(t, rows[:n]), Y=Y, acc=Sym)
-    add(acc, sum(predict(tt, r) == Y(r)
+    tt = growTree(clone(t, rows[:n]), y=y, acc=Sym)
+    add(acc, sum(predict(tt, r) == y(r)
                  for r in rows[n:])/(len(rows) - n))
   print("accuracy mu %.2f sd %.2f" % (acc.mu, acc.sd))
 
@@ -449,8 +462,14 @@ def run(f): # reseed, call f, catch crashes; 1 if crashed
   except Exception: traceback.print_exc(); return 1
   return 0
 
-if __name__ == "__main__":
-  for j, s in enumerate(sys.argv):
-    if f := eg.get("-" + s.lstrip("-")): run(f)
+def runs():
+  errs = 0
+  for j, s in enumerate(sys.argv): 
+    if s=="-h": print(__doc__)
+    if f := eg.get("-" + s.lstrip("-")): 
+      errs += run(f)
     elif hasattr(the, k := s.lstrip("-")):
       setattr(the, k, atom(sys.argv[j + 1]))
+  return errs
+
+if __name__ == "__main__": sys.exit(runs())
