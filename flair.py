@@ -18,13 +18,15 @@ Options:
   --est=mean     holdout: leaf estimate; near(est) or mean
   --more=4       acquisition: labels per round
   --best=.66     acquisition: pool keep fraction
+  --k=1          bayes: low-frequency hack for rare symbols
+  --m=2          bayes: prior strength
   --seed=1234    random number generation
   --places=2     show these decimal places
   --file=/Users/timm/gits/moot/optimize/misc/auto93.csv
 """
 #SSOT #Config #Regx #DSL
 import re, os, sys, glob, traceback
-from math import exp, log
+from math import exp, log, pi
 from random import seed, sample
 from types import SimpleNamespace as Box
 import sys; sys.dont_write_bytecode = True
@@ -103,7 +105,26 @@ def norm(num, v): # Num value --> 0..1, logistic cdf
   z = (v - num.mu)/(num.sd + 1/BIG)
   return 1/(1 + exp(-1.7*max(-3, min(3, z))))
 
-# --- dist: distance ---------------------------------------------
+# --- like: naive bayes likelihood -------------------------------
+def like(col, v, prior=0): # how much does col like v?
+  if col.it is Sym:
+    return (col.has.get(v,0) + the.k*prior)/(col.n + the.k + 1/BIG)
+  var = 2*col.sd**2 + 1/BIG
+  return exp(-(v - col.mu)**2/var)/(pi*var)**0.5
+
+def likes(tbl, row, nall, nh): # log-likelihood of row in tbl
+  prior = (len(tbl.rows) + the.m)/(nall + the.m*nh)
+  out = log(prior)
+  for at in tbl.cols.x:
+    if (v := row[at]) != "?":
+      if (x := like(tbl.cols.all[at],v,prior)) > 0: out += log(x)
+  return out
+
+def liked(row, tbls): # the tbl that most likes row
+  nall = sum(len(t.rows) for t in tbls)
+  return max(tbls, key=lambda t: likes(t, row, nall, len(tbls)))
+
+# --- dist: distance ---------------------------------------------
 def _dist(col, a, b): # one column's distance
   if a == "?" and b == "?": return 1
   if col.it is Sym: return a != b
@@ -129,34 +150,34 @@ def ymids(tbl, rows): # mids of the y columns, in these rows
                    tbl.cols.all[at].it())) for at in tbl.cols.y]
 
 # --- descend: label a few rows, cull toward the good pole -------
-def poles(tbl, rows, y): # far pair in rows; best-->worst axis
+def poles(tbl, rows, y, ordering=False): # far pair in rows
   far = lambda r: max(rows, key=lambda x: distx(tbl, x, r))
   a = far(rows[0]); z = far(a)
-  if y(z) < y(a): a, z = z, a
+  if ordering and y(z) < y(a): a, z = z, a
   c = distx(tbl, a, z) + 1/BIG
   return lambda r: (distx(tbl,a,r)**2 + c*c -
                     distx(tbl,z,r)**2)/(2*c)
 
-def descends(tbl, rows, label=lambda row: row):
-  def descend(rows): # one greedy descent along project
-    while len(rows) > the.stop and len(lab) < cap:
-      todo, more = [], min(the.more, cap - len(lab))
-      for r in rows:
-        if id(r) in lab: todo += [lab[id(r)]]
-        elif more > 0:
-          more -= 1; lab[id(r)] = label(r); todo += [lab[id(r)]]
-      rows = sorted(rows, key=project(todo))
-      rows = rows[:int(the.best*len(rows))]
+def descend(tbl, rows, y, seen, cap, label, go=False):
+  while len(rows) > the.stop and len(seen) < cap: # one descent
+    todo, more = [], min(the.more, cap - len(seen))
+    for r in rows:
+      if id(r) in seen: 
+        todo += [seen[id(r)]]
+      elif more > 0: 
+        todo += [seen[id(r)]]
+        more -= 1; go=True; seen[id(r)] = label(r); 
+    rows = sorted(rows, key=poles(tbl, todo, y))
+    rows = rows[:int(the.best*len(rows))]
+  return go
 
-  y       = lambda r: disty(tbl, r)
-  project = lambda rows: poles(tbl, rows, y)
-  lab     = {}
-  cap     = the.budget - the.check
-  while len(lab) < cap:
-    n = len(lab)
-    descend(shuffle(rows))
-    if len(lab) == n: break                    # no progress
-  return sorted(lab.values(), key=y)
+def descends(tbl, rows, label=lambda row: row):
+  seen = {}
+  cap  = the.budget - the.check
+  y    = lambda r: disty(tbl, r)
+  while len(seen) < cap and \
+        descend(tbl, shuffle(rows), y, seen, cap, label): pass
+  return sorted(seen.values(), key=y)
 
 # --- cut: min expected variance splits --------------------------
 def matches(col, x, v): # does x fall on the yes side of cut v?
@@ -268,7 +289,6 @@ def o(v): # tidy: round floats; boxes --> dicts, no _keys
 
 def oo(x): print(o(x)); return x
 
-
 def printm(rows, align=""): # align columns; flags "<->" per col
   rows = [[str(o(x)) for x in r] for r in rows]
   ws = [max(map(len, c)) for c in zip(*rows)]
@@ -317,16 +337,19 @@ def ks(xs, ys, a=1.36): # sorted xs,ys: 95% kolmogorov-smirnov
     d = max(d, abs(i/n - j/m))
   return d <= a*((n + m)/(n*m))**0.5
 
-def same(xs, ys): # indistinguishable by all three tests
-  xs, ys = sorted(xs), sorted(ys)
+def same(xs, ys, ordered=False): # same, by all three tests
+  if not ordered: xs, ys = sorted(xs), sorted(ys)
   return cliffs(xs, ys) and ks(xs, ys) and cohen(xs, ys)
 
-def top(d, reverse=False): # names statistically tied with best
+def ranks(d, reverse=False): # dict[str,rank]; rank 1 is best
   mu = lambda a: sum(a)/len(a)
-  xs = sorted(d.items(),key=lambda kv:mu(kv[1]), reverse=reverse)
-  j = 0
-  while j+1 < len(xs) and same(xs[0][1], xs[j+1][1]): j += 1
-  return {k for k, _ in xs[:j+1]}
+  xs = sorted(((k, sorted(v)) for k, v in d.items()),
+              key=lambda kv: mu(kv[1]), reverse=reverse)
+  out, rank, anchor = {}, 1, xs[0][1]
+  for k, v in xs:
+    if not same(anchor, v, True): rank += 1; anchor = v
+    out[k] = rank
+  return out
 
 # --- demos ------------------------------------------------------
 def test_list():
@@ -362,6 +385,28 @@ def test_csv():
   n = sum(1 for _ in csv(the.file))
   assert n > 100
   print(n, "rows")
+
+def test_like():
+  "Syms like seen symbols; Nums peak at their mean"
+  s = adds("aab", Sym())
+  n = adds([1, 2, 3, 4, 5], Num())
+  assert like(s, "a") > like(s, "b") > like(s, "c")
+  assert like(n, 3) > like(n, 5) > like(n, 9)
+  print("like(s,'a') %.2f | like(n,3) %.2f" %
+        (like(s, "a"), like(n, 3)))
+
+def test_likes():
+  "bayes self-classify diabetes via liked; beats chance"
+  t = adds(csv("/Users/timm/gits/moot/classify/diabetes.csv"),
+           Tbl())
+  k = t.cols.klass
+  ts = {}
+  for r in t.rows:
+    ts.setdefault(r[k], clone(t)); add(ts[r[k]], r)
+  acc = sum(liked(r, list(ts.values())) is ts[r[k]]
+            for r in t.rows)/len(t.rows)
+  print("accuracy %.2f" % acc)
+  assert acc > 0.7
 
 def test_cuts():
   "best (least variance) cut of full table"
