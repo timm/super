@@ -28,7 +28,7 @@ Options:
 import re, os, sys, glob, traceback
 from math import exp, log, pi
 from random import seed, sample
-from types import SimpleNamespace as Box
+from types import SimpleNamespace as has
 import sys; sys.dont_write_bytecode = True
 #Nocache
 
@@ -40,7 +40,7 @@ def atom(s): # string --> number or stripped string
     except ValueError: ...
   return s.strip()
 
-the = Box(**{k: atom(v) for k, v in
+the = has(**{k: atom(v) for k, v in
              re.findall(r"(\w+)=(\S+)", __doc__ or "")})
 
 def csv(file): # iterate a csv file's atom rows
@@ -49,14 +49,14 @@ def csv(file): # iterate a csv file's atom rows
       if s := s.strip():
         yield [atom(x) for x in s.split(",")]
 
-# --- create: all types are a Box, tagged by their maker -------
-def Num():  return Box(it=Num, n=0, mu=0, m2=0, sd=0)
-def Sym():  return Box(it=Sym, n=0, has={})
+# --- create: all types are a has, tagged by their maker -------
+def Num():  return has(it=Num, n=0, mu=0, m2=0, sd=0)
+def Sym():  return has(it=Sym, n=0, seen={})
 def Col(s): return (Num if s[0].isupper() else Sym)()
-def Tbl():  return Box(it=Tbl, rows=[], cols=None)
+def Tbl():  return has(it=Tbl, rows=[], cols=None)
 
 def Cols(names): # names --> columns grouped into x,y
-  i = Box(it=Cols, names=names, all=[], x={}, y={}, klass=None)
+  i = has(it=Cols, names=names, all=[], x={}, y={}, klass=None)
   for at, s in enumerate(names):
     i.all += [Col(s)]
     if   s[-1] == "X": pass
@@ -82,7 +82,7 @@ def add(i, v, w=1): # update any box; w=-1 is deletion
     [add(c, x, w) for c, x in zip(i.all, v) if x != "?"]
   else:
     i.n += w
-    if   i.it is Sym: i.has[v] = w + i.has.get(v, 0)
+    if   i.it is Sym: i.seen[v] = w + i.seen.get(v, 0)
     elif i.n < 1: i.n = i.mu = i.m2 = i.sd = 0
     else:
       d = v - i.mu
@@ -93,13 +93,13 @@ def add(i, v, w=1): # update any box; w=-1 is deletion
 # --- mid, div: central tendency, diversity ---------------------
 def mid(col): # Num: mean. Sym: mode
   return (col.mu if col.it is Num else
-          max(col.has, key=col.has.get))
+          max(col.seen, key=col.seen.get))
 
 def mids(tbl): return [mid(col) for col in tbl.cols.all]
 
 def div(col): # Num: sd. Sym: entropy (v>0 dodges deletions)
   return col.sd if col.it is Num else \
-    -sum(v/col.n*log(v/col.n,2) for v in col.has.values() if v>0)
+    -sum(v/col.n*log(v/col.n,2) for v in col.seen.values()if v>0)
 
 def norm(num, v): # Num value --> 0..1, logistic cdf
   if v == "?": return v
@@ -110,7 +110,7 @@ def norm(num, v): # Num value --> 0..1, logistic cdf
 # --- like: naive bayes likelihood -------------------------------
 def like(col, v, prior=0): # how much does col like v?
   if col.it is Sym:
-    return (col.has.get(v,0) + the.k*prior)/(col.n + the.k + 1/BIG)
+    return (col.seen.get(v,0) + the.k*prior)/(col.n + the.k + 1/BIG)
   var = 2*col.sd**2 + 1/BIG
   return exp(-(v - col.mu)**2/var)/(pi*var)**0.5
 
@@ -220,12 +220,12 @@ def cutTbl(tbl, rows, y, acc=Num): # best cut, as a labeled Span
     _, at, v = z
     c, s = tbl.cols.all[at], tbl.cols.names[at]
     eq, ne = ("==", "!=") if c.it is Sym else ("<=", ">")
-    return Box(it=cutTbl, at=at, v=v, col=c,
+    return has(it=cutTbl, at=at, v=v, col=c,
                txt=f"{s} {eq} {v}", anti=f"{s} {ne} {v}")
 
 # --- tree -----------------------------------------------------
 def Tree(**d):
-  return Box(**dict(it=Tree, n=0, rows=[], cut=None,
+  return has(**dict(it=Tree, n=0, rows=[], cut=None,
                     ys=None, leafs=1) | d)
 
 def growTree(tbl, y=None, acc=Num): # min-variance splits
