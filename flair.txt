@@ -1,3 +1,4 @@
+## SE
 ### SSOT
 
 SSOT = single source of truth. All the settings live in one
@@ -14,3 +15,260 @@ disagree.
 any `--key value` pair whose key names a setting gets atom-ed
 and stored. Demos run via `-name` flags looked up in the `eg`
 table (built from globals: every test_* function is a demo).
+
+### DSL
+
+Domain-specific languages: small notations tuned to one job.
+The options block is a tiny settings language read equally
+well by humans and by one regular expression.
+
+### Fluent
+
+Fluent style: operations return the thing they touched, so
+calls compose and nest. Python's random.shuffle returns
+None; wrapping it to return its list makes it chainable.
+
+### Coerce
+
+Parse, don't validate. Strings become typed atoms (int,
+float, stripped str) at the boundary, so no downstream code
+ever wonders what type it holds.
+
+### Factory
+
+Factory functions: tiny constructors (Num, Sym, Col) that
+return fresh structures. Col picks which kind to build from
+the column's name — creation logic in one small place.
+
+### Clone
+
+Prototype pattern: new things are copies of old things'
+structure. clone() makes an empty Tbl with the same columns
+by replaying the original header.
+
+### Header
+
+Convention over configuration: column names encode the
+schema. Uppercase = numeric; trailing "+"/"-" = goal to
+maximize/minimize; "!" = class; "X" = ignore. Data files
+describe themselves; no separate metadata file.
+
+### Poly
+
+Polymorphism without inheritance: one add() serves Syms,
+Nums, Tbls and Cols by duck typing (type/hasattr dispatch
+on the shape of its argument). One verb, many nouns.
+
+### JIT
+
+Just-in-time computation with cache invalidation: mids()
+computes a table's center only on demand and stores it;
+add() zaps that cache whenever new data arrives. Writers
+invalidate, readers rebuild.
+
+### Epsilon
+
+Seeding a denominator with 1/BIG (a near-zero epsilon)
+dodges divide-by-zero without a single if-statement. Guard
+by arithmetic, not by branching.
+
+### Demo
+
+Tests are demos are docs: every test_* function both checks
+an assertion and prints something a human can learn from,
+and -list indexes them by their docstrings. One artifact,
+three audiences.
+
+### Baseline
+
+Claims need floors and ceilings: opt1 reports the treatment
+(tree) beside random guessing (floor) and the best possible
+pick (ceiling). A number without baselines is just a number.
+
+### Seed
+
+Reproducibility: reseed the random number generator before
+every demo, so "random" runs give the same answer twice.
+And catch crashes with a traceback so one broken demo
+never kills the suite.
+
+## AI
+### DontKnow
+
+Missing values ("?") are first-class citizens. Every reader
+skips them explicitly; nothing crashes, nothing imputes too
+early. Real data is holey; code should expect that.
+
+### Incremental
+
+Online learning: Welford's algorithm updates mean and
+variance one value at a time, in constant memory, no second
+pass. Models that learn as data streams by scale to any n.
+
+### Entropy
+
+Entropy measures the diversity of a symbol distribution in
+bits. Low entropy = pure = informative. The symbolic twin
+of standard deviation (see div()).
+
+### Squash
+
+Normalization: z-scores, clamped to +/-3, squashed through
+a logistic CDF onto 0..1. All columns land on one scale, so
+distances compare apples to apples and outliers can't shout.
+
+### Heaven
+
+Multi-objective scoring as geometry: "distance to heaven"
+(d2h) measures how far a row's goals sit from an ideal
+corner (best value on every objective). Many goals collapse
+into one comparable number.
+
+### Sample
+
+Random sampling beats exhaustive search: a few picks
+(the.few) from a big list approximate the whole cheaply.
+Most of AI is knowing what you can afford not to look at.
+
+### Minkowski
+
+The Minkowski distance generalizes Euclidean (p=2) and
+Manhattan (p=1) with one dial (the.p). One formula, many
+geometries.
+
+### FastMap
+
+FastMap: pick two distant poles, project every row onto the
+line between them (cosine rule). A linear-time proxy for
+quadratic-time clustering — random projection in one line.
+
+### Discretize
+
+Discretization: continuous values chopped into a few bins
+(the.bins). Coarse views resist noise, make counting cheap,
+and turn numeric columns into countable symbols.
+
+### Bisect
+
+Divide and conquer: sort rows by their pole projection, cut
+at the median. Recursive bisection is bi-clustering — each
+split needs only the order, not the raw distances.
+
+### Score
+
+Contrast-set scoring: max(b,r)^2/(b+r) rewards spans that
+are both frequent and one-sided — support times precision.
+Spans are also self-labeling: each carries the text of its
+own condition (txt) and negation (anti), so trees print
+themselves.
+
+### Greedy
+
+Greedy search: never enumerate all subsets, just take the
+single best span at each level. Locally optimal choices,
+repeated recursively, are usually good enough — and cheap.
+
+### Tree
+
+Recursive partitioning: split on the best contrast, recurse
+on the yes and no halves. Decision-tree learning in a dozen
+lines, with each branch explaining itself (see Score).
+
+### Stop
+
+Stopping rules are regularization: quit splitting below
+the.stop rows or past `cap` leaves. Trees that grow past
+their data's support memorize noise; knowing when to stop
+matters more than knowing how to grow.
+
+### Holdout
+
+Never test on training data: split, train on one part,
+score on the rest. Repeat 20 times and report mean and sd —
+a single lucky split proves nothing.
+
+### Budget
+
+Label-efficient learning: assume asking "how good is this
+row?" is expensive. Spend a fixed budget (the.budget)
+growing the tree, then only the.check more labels on its
+top picks. Optimization under a labeling budget is active
+learning.
+
+## Python
+### HashBang
+
+`#!/usr/bin/env python3 -B` makes the file its own command:
+chmod it and run it, no wrapper script needed. The -B stops
+Python littering the directory with __pycache__ bytecode.
+
+### Regx
+
+Regular expressions mine structure from free text. One
+re.findall over the help string yields every (flag, default)
+pair; the documentation is also the parse target.
+
+### Nocache
+
+sys.dont_write_bytecode = True: small scripts should leave
+no droppings. See also HashBang's -B flag; belt and braces.
+
+### Struct
+
+Data as plain structs: SimpleNamespace (aliased to one
+letter, `o`) gives dot-access records with no class
+ceremony. Behavior lives in small functions, not in
+class hierarchies.
+
+### EAFP
+
+Easier to Ask Forgiveness than Permission: try the int, catch
+the failure, try the float, catch again. Exceptions as normal
+control flow is idiomatic Python, unlike most languages.
+
+### Comprehension
+
+Comprehensions build whole containers in one expression:
+here a dict of settings straight from the regex matches.
+Declarative "what", not imperative "how".
+
+### Gen
+
+Generators (yield) stream results one at a time. The csv
+reader holds one line in memory no matter the file size:
+lazy iteration means constant space.
+
+### Walrus
+
+The walrus operator := assigns inside an expression, fusing
+"compute it" and "test it" into one line (if s := s.strip()).
+
+### Memo
+
+Memoization via exceptions: try the cache, and on
+AttributeError create it (first call), on KeyError fill it.
+The cache is born lazily inside its own lookup.
+
+### Closure
+
+Closures: functions that return functions carrying their
+birth environment. poles() returns a projector remembering
+its two poles and their separation; no object required.
+
+### YieldFrom
+
+Generator pipelines: nested helper generators (syms, cuts)
+delegated upward with `yield from`. Candidate spans flow
+through without ever building an intermediate list.
+
+### Cell
+
+A one-item list (n=[1]) gives a closure a mutable slot: the
+inner function can update the shared counter without
+`nonlocal` gymnastics. Boxing a value to share it.
+
+### Reflect
+
+Reflection: the program reads its own globals() to build
+the demo table, so writing test_x() *is* registering the
+command -x. Code as data; zero bookkeeping.

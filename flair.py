@@ -24,7 +24,9 @@ from random import shuffle as shuffle_
 import sys; sys.dont_write_bytecode = True
 #Nocache
 def shuffle(t): shuffle_(t); return t # fluent shuffle
+#Fluent
 from types import SimpleNamespace as o
+#Struct
 
 BIG = 1e30
 
@@ -33,28 +35,32 @@ def atom(s): # string --> number or stripped string
   except ValueError:
     try: return float(s)
     except ValueError: return s.strip()
+#Coerce #EAFP
 
 class The(dict): __getattr__ = dict.get # the.k == the[k]
-#SSOT
-#Config
+
 the = The({k: atom(v)
            for k, v in re.findall(r"(\w+)=(\S+)", __doc__)})
+#Comprehension
 
 def csv(file): # iterate a csv file's atom rows
   with open(file) as f:
     for s in f:
       if s := s.strip():
         yield [atom(x) for x in s.split(",")]
+#Gen #Walrus
 
 # ---------------------------------------------------------------
 def Num(): return o(n=0, mu=0, m2=0)
 def Sym(): return {}
 def Col(s): return Num() if s[0].isupper() else Sym()
+#Factory
 def Tbl(src):
   return adds(src, o(rows=[], cols=None, center=None))
 
 def clone(tbl,rows=[]): # make new  with same structure as tbl
   return Tbl( [tbl.cols.names]+rows )
+#Clone
 
 def Cols(names): # names --> columns grouped into x,y
   i = o(names=names, all=[], x={}, y={}, klass=None)
@@ -65,6 +71,7 @@ def Cols(names): # names --> columns grouped into x,y
     elif s[-1] in "+-": i.y[at] = s[-1] == "+"
     else: i.x[at] = at
   return i
+#Header
 
 def adds(src, i=None): # add all from any iterable
   i = i or Num()
@@ -74,6 +81,7 @@ def adds(src, i=None): # add all from any iterable
 def add(i, v, w=1): # add value (or row) v, weight w
 # ---------------------------------------------------------------
   if v == "?": return v
+  #DontKnow
   if   type(i) is dict: i[v] = w + i.get(v, 0)
   elif hasattr(i, "mu"): welford(i, v, w)
   elif hasattr(i, "rows"):
@@ -83,6 +91,7 @@ def add(i, v, w=1): # add value (or row) v, weight w
   elif hasattr(i, "x"):
     for c, x in zip(i.all, v): add(c, x, w)
   return v
+#Poly
 
 def welford(i, v, w): # update a Num in place
   i.n += w
@@ -91,6 +100,7 @@ def welford(i, v, w): # update a Num in place
     d = v - i.mu
     i.mu += w*d/i.n
     i.m2 += w*d*(v - i.mu)
+#Incremental
 
 def mid(c): # middle: mode (Sym), mu (Num), mids (Tbl)
   return max(c, key=c.get) if type(c)==dict else c.mu
@@ -98,6 +108,7 @@ def mid(c): # middle: mode (Sym), mu (Num), mids (Tbl)
 def mids(tbl): # JIT center; add() invalidates the cache
   tbl.center = tbl.center or [mid(c) for c in tbl.cols.all]
   return tbl.center
+#JIT
 
 def div(c): # diversity: ent (Sym) or sd (Num)
   return ent(c) if type(c) is dict else sd(c)
@@ -108,6 +119,7 @@ def sd(c): # diversity of a Num
 def ent(d): # diversity of a Sym
   n = sum(d.values())
   return -sum(v/n*log(v/n, 2) for v in d.values() if v > 0)
+#Entropy
 
 def norm(c, v): # value --> 0..1, logistic cdf, memoized
   if v == "?": return v
@@ -118,6 +130,7 @@ def norm(c, v): # value --> 0..1, logistic cdf, memoized
   out = 1/(1 + exp(-1.7*max(-3, min(3, z))))
   c.memo[v] = out
   return out
+#Memo #Squash
 
 def disty(t, row): # d2h: distance of goals to best corner
   d, n = 0, 1/BIG
@@ -126,10 +139,12 @@ def disty(t, row): # d2h: distance of goals to best corner
     if v != "?":
       n += 1; d += abs(v - w)**the.p
   return (d/n)**(1/the.p)
+#Heaven #Epsilon
 
 # ---------------------------------------------------------------
 def some(t, n): # n random picks from list t
   return [choice(t) for _ in range(min(n, len(t)))]
+#Sample
 
 def distx(t, r1, r2): # x-column distance
   d, n = 0, 1/BIG
@@ -137,6 +152,7 @@ def distx(t, r1, r2): # x-column distance
     n += 1
     d += _distx(t.cols.all[at], r1[at], r2[at])**the.p
   return (d/n)**(1/the.p)
+#Minkowski
 
 def _distx(c, a, b): # helper for one column
   if a == "?" and b == "?": return 1
@@ -154,10 +170,12 @@ def poles(t, rows): # fastmap projector along 2 far poles
   b = far(a)
   c = distx(t, a, b) + 1/BIG
   return lambda r:(distx(t,a,r)**2 + c*c - distx(t,b,r)**2)/(2*c)
+#FastMap #Closure
 
 def bin(c, v): # top-level col c, value v --> bin 0..bins-1
   if v == "?" or type(c) is dict: return v
   return int(norm(c, v)*the.bins)
+#Discretize
 
 def binned(t, row, d, ends): # count row's bins into d
   for at in t.cols.x:
@@ -179,6 +197,7 @@ def halves(t, rows): # median-split rows; bin as we go
     else:                d, nr = cr, nr + 1
     binned(t, row, d, ends)
   return cl, cr, nl, nr, ends
+#Bisect
 
 # ---------------------------------------------------------------
 def span(name, at, lo, hi, b, r): # scored, self-labeling
@@ -190,6 +209,7 @@ def span(name, at, lo, hi, b, r): # scored, self-labeling
   return o(name=name, at=at, lo=lo, hi=hi,
            txt=f"{name} {a}", anti=f"{name} {z}",
            score=max(b, r)**2/(b + r + 1/BIG))
+#Score
 
 def spans(t, rows): # yield the spans of rows' two halves
   cl, cr, nl, nr, ends = halves(t, rows)
@@ -212,10 +232,12 @@ def spans(t, rows): # yield the spans of rows' two halves
       yield from syms(at, cl[at], cr[at])
     else:
       yield from cuts(at, cl[at], cr[at], ends[at])
+#YieldFrom
 
 def contrasts(t, rows): # best span over all x columns
   return max(spans(t,rows), key=lambda z: z.score,
              default=None)
+#Greedy
 
 # ---------------------------------------------------------------
 def selects(z, row): # does row fall inside span z?
@@ -237,6 +259,7 @@ def tree(t, cap=BIG): # grow subtrees, at most cap leaves
           node.no  = grow(no)
     return node
   return grow(t.rows)
+#Tree #Cell #Stop
 
 def leaves(node): # how many leaves in this tree?
   return leaves(node.yes) + leaves(node.no) if node.cut else 1
@@ -262,11 +285,12 @@ def show(node, pre=None, txt=""): # print tree; n at left
     show(node.yes, sub, node.cut.txt)
     show(node.no,  sub, node.cut.anti)
 
-# ---------------------------------------------------------------
+# ---------------------------------------------------------------
 def test_list():
   "show the demos"
   for k, f in eg.items():
     print("%-12s %s" % (k, (f.__doc__ or "").strip()))
+#Demo
 
 def test_all():
   "run all the demos"
@@ -314,6 +338,7 @@ def test_predict():
     tr = clone(t, rows[:n])
     adds(errs(t, tr, tree(tr), rows[n:]), err)
   print("err mu %.3f sd %.3f" % (err.mu, sd(err)))
+#Holdout
 
 def test_err():
   "20 moot sets, 20 repeats: err mu/sd for k=1,3,5,7,9"
@@ -348,6 +373,7 @@ def holdout(t): # model built on half ranks the other half
   top = sorted(rows[half:], key=lambda r: guess(tr, tt, r))
   return min(top[:the.check],
              key=lambda r: disty(tr, r)), rows[half:], tr
+#Budget
 
 def opt1(f): # one dataset: win of tree, rand, best picks
   t = Tbl(csv(f))
@@ -362,6 +388,7 @@ def opt1(f): # one dataset: win of tree, rand, best picks
   print("%-22s %5s tree %4.0f rand %4.0f best %4.0f" %
         (f.split("/")[-1][:22], len(t.rows),
          treat.mu, rand.mu, best.mu))
+#Baseline
 
 def test_opt():
   "optimize the 20 smallest moot data sets"
@@ -384,11 +411,13 @@ def test_tree():
 
 eg = {"-" + k[5:]: f for k, f in globals().items()
       if k.startswith("test_")}
+#Reflect
 
 def run(f): # reseed, call f, catch crashes
   seed(the.seed)
   try: f()
   except Exception: traceback.print_exc()
+#Seed
 
 if __name__ == "__main__":
   for j, s in enumerate(sys.argv):
