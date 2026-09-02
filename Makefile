@@ -11,8 +11,23 @@ xargs: ## run What+Flag on every Data csv, Cpu at a time
 	@find $(Data) -name '*.csv' | \
 	xargs -P $(Cpu) -n 1 -I{} python3 $(What) --file {} $(Flag)
 
+opt1s: What=flair.py
+opt1s: ## What -opt1 on every Data csv; sorted, wrapped
+	@$(MAKE) -s xargs What=$(What) Flag=-opt1 | sort -n | fmt -60
+
+~/tmp/flair.txt: ## save an opt1s run here
+	@$(MAKE) -s opt1s | tee $@
+
 ~/tmp/contrast.txt: ## save the sorted xargs run here
 	@$(MAKE) -s xargs | tee $@
+
+~/tmp/%.py.pdf: %.py ## .py ==> .pdf (make ~/tmp/x.py.pdf)
+	@mkdir -p ~/tmp
+	@echo "pdf-ing $@ ..."
+	@a2ps -BrEpython --chars-per-line=70 --file-align=fill \
+	  --line-numbers=1 --borders=no --pro=color --columns=2 \
+	  -M letter -o - $< | ps2pdf - $@
+	@open $@
 
 ~/tmp/%.lua.pdf: %.lua ## .lua ==> .pdf (make ~/tmp/x.lua.pdf)
 	@mkdir -p ~/tmp

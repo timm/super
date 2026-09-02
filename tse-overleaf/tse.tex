@@ -1,0 +1,60 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+% TSE-style two-column test: does one flair.py section fit one column?
+\usepackage{fontspec}
+\usepackage{xcolor}
+\usepackage{minted}
+\usepackage{float}
+
+\setmonofont{Iosevka}[
+  Path=./Fonts/,
+  Extension=.ttf,
+  UprightFont=*-Regular,
+  BoldFont=*-Bold,
+  ItalicFont=*-Italic,
+  BoldItalicFont=*-BoldItalic,
+]
+
+\definecolor{codebg}{gray}{0.98}
+
+\setminted{
+  fontsize=\fontsize{7.5}{8.6}\selectfont,
+  bgcolor=codebg,
+  frame=none,
+  framesep=2mm,
+  xleftmargin=0pt,
+  numbersep=3pt,
+  stepnumber=5,
+  linenos,
+  firstnumber=last,
+  baselinestretch=0.95,
+  breaklines=false,
+}
+\setminted[python]{style=tango}
+\renewcommand{\theFancyVerbLine}{%
+  \color{gray}\fontsize{5.5}{5.5}\selectfont\arabic{FancyVerbLine}}
+
+\begin{document}
+
+\title{Column-Fit Test: flair.py in TSE Format}
+\author{Tim Menzies}
+\maketitle
+
+\section{Config and CSV}
+\inputminted{python}{sec1_config.py}
+
+\section{Types and Update}
+\inputminted{python}{sec2_types.py}
+
+\section{Distance and Descent}
+\inputminted{python}{sec3_dist.py}
+
+\section{Cuts and Trees}
+\inputminted{python}{sec4_cuts.py}
+
+\section{Misc and Stats}
+\inputminted{python}{sec5_misc.py}
+
+\section{Demos and Main}
+\inputminted{python}{sec6_demos.py}
+
+\end{document}
