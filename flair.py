@@ -29,6 +29,7 @@ import re, os, sys, glob, traceback
 from math import exp, log, pi
 from random import seed, sample
 from types import SimpleNamespace as has
+#Struct
 import sys; sys.dont_write_bytecode = True
 #Nocache
 
@@ -39,21 +40,25 @@ def atom(s): # string --> number or stripped string
     try: return f(s)
     except ValueError: ...
   return s.strip()
+#Coerce #EAFP
 
 the = has(**{k: atom(v) for k, v in
              re.findall(r"(\w+)=(\S+)", __doc__ or "")})
+#Comprehension
 
 def csv(file): # iterate a csv file's atom rows
   with open(file) as f:
     for s in f:
       if s := s.strip():
         yield [atom(x) for x in s.split(",")]
+#Gen #Walrus
 
-# --- create: all types are a has, tagged by their maker -------
+# --- create: all types are a has, tagged by their maker -------
 def Num():  return has(it=Num, n=0, mu=0, m2=0, sd=0)
 def Sym():  return has(it=Sym, n=0, seen={})
 def Col(s): return (Num if s[0].isupper() else Sym)()
 def Tbl():  return has(it=Tbl, rows=[], cols=None)
+#Factory #TypeTag
 
 def Cols(names): # names --> columns grouped into x,y
   i = has(it=Cols, names=names, all=[], x={}, y={}, klass=None)
@@ -64,9 +69,11 @@ def Cols(names): # names --> columns grouped into x,y
     elif s[-1] in "+-": i.y[at] = s[-1] == "+"
     else: i.x[at] = at
   return i
+#Header
 
 def clone(tbl, rows=[]): # new table, same structure as tbl
   return adds([tbl.cols.names] + rows, Tbl())
+#Clone
 
 # --- add: update -----------------------------------------------
 def adds(src, it=None): # add all from any iterable
@@ -80,6 +87,7 @@ def add(i, v, w=1): # update any box; w=-1 is deletion
     else: i.cols = Cols(v)
   elif i.it is Cols:
     [add(c, x, w) for c, x in zip(i.all, v) if x != "?"]
+    #DontKnow
   else:
     i.n += w
     if   i.it is Sym: i.seen[v] = w + i.seen.get(v, 0)
@@ -89,6 +97,7 @@ def add(i, v, w=1): # update any box; w=-1 is deletion
       i.mu += w*d/i.n
       i.m2 = max(0, i.m2 + w*d*(v - i.mu))
       i.sd = 0 if i.n < 2 else (i.m2/(i.n - 1))**0.5
+#Poly #Incremental
 
 # --- mid, div: central tendency, diversity ---------------------
 def mid(col): # Num: mean. Sym: mode
@@ -100,14 +109,15 @@ def mids(tbl): return [mid(col) for col in tbl.cols.all]
 def div(col): # Num: sd. Sym: entropy (v>0 dodges deletions)
   return col.sd if col.it is Num else \
     -sum(v/col.n*log(v/col.n,2) for v in col.seen.values()if v>0)
+#Entropy
 
 def norm(num, v): # Num value --> 0..1, logistic cdf
   if v == "?": return v
   z = (v - num.mu)/(num.sd + 1/BIG)
   return 1/(1 + exp(-1.7*max(-3, min(3, z))))
+#Squash #Epsilon
 
-<<<<<<< HEAD
-# --- like: naive bayes likelihood -------------------------------
+# --- like: naive bayes likelihood -------------------------------
 def like(col, v, prior=0): # how much does col like v?
   if col.it is Sym:
     return (col.seen.get(v,0) + the.k*prior)/(col.n + the.k + 1/BIG)
@@ -125,10 +135,9 @@ def likes(tbl, row, nall, nh): # log-likelihood of row in tbl
 def liked(row, tbls): # the tbl that most likes row
   nall = sum(len(t.rows) for t in tbls)
   return max(tbls, key=lambda t: likes(t, row, nall, len(tbls)))
+#Bayes
 
-# --- dist: distance ---------------------------------------------
-=======
-# --- dist: distance -------------------------------------------
+# --- dist: distance -------------------------------------------
 def _dist(col, a, b): # one column's distance
   if a == "?" and b == "?": return 1
   if col.it is Sym: return a != b
@@ -143,11 +152,13 @@ def distx(tbl, r1, r2): # x-column distance
     n += 1
     d += _dist(tbl.cols.all[at], r1[at], r2[at])**the.p
   return (d/n)**(1/the.p)
+#Minkowski
 
 def disty(tbl, row): # d2h: distance of goals to best corner
   d = sum(abs(norm(tbl.cols.all[at], row[at]) - w)**the.p
           for at, w in tbl.cols.y.items())
   return (d/len(tbl.cols.y))**(1/the.p)
+#Heaven
 
 def ymids(tbl, rows): # mids of the y columns, in these rows
   return [mid(adds((r[at] for r in rows if r[at] != "?"),
@@ -161,16 +172,17 @@ def poles(tbl, rows, y, ordering=False): # far pair in rows
   c = distx(tbl, a, z) + 1/BIG
   return lambda r: (distx(tbl,a,r)**2 + c*c -
                     distx(tbl,z,r)**2)/(2*c)
+#FastMap #Closure
 
 def descend(tbl, rows, y, seen, cap, label, go=False):
   while len(rows) > the.stop and len(seen) < cap: # one descent
     todo, more = [], min(the.more, cap - len(seen))
     for r in rows:
-      if id(r) in seen: 
+      if id(r) in seen:
         todo += [seen[id(r)]]
-      elif more > 0: 
+      elif more > 0:
         todo += [seen[id(r)]]
-        more -= 1; go=True; seen[id(r)] = label(r); 
+        more -= 1; go=True; seen[id(r)] = label(r);
     rows = sorted(rows, key=poles(tbl, todo, y))
     rows = rows[:int(the.best*len(rows))]
   return go
@@ -182,8 +194,9 @@ def descends(tbl, rows, label=lambda row: row):
   while len(seen) < cap and \
         descend(tbl, shuffle(rows), y, seen, cap, label): pass
   return sorted(seen.values(), key=y)
+#Acquire #Budget
 
-# --- cut: min expected variance splits ------------------------
+# --- cut: min expected variance splits ------------------------
 def matches(col, x, v): # does x fall on the yes side of cut v?
   return x == "?" or (x == v if col.it is Sym else x <= v)
 
@@ -192,6 +205,7 @@ def selects(z, row): return matches(z.col, row[z.at], z.v)
 def score(col1, col2): # expected diversity of col1|col2 split
   n1, n2 = col1.n, col2.n
   return (div(col1)*n1 + div(col2)*n2)/(n1 + n2 + 1/BIG)
+#Score
 
 def cutsSym(xy, tot, acc): # (score,v): yes = one symbol
   for v in dict.fromkeys(x for x, _ in xy):
@@ -222,8 +236,9 @@ def cutTbl(tbl, rows, y, acc=Num): # best cut, as a labeled Span
     eq, ne = ("==", "!=") if c.it is Sym else ("<=", ">")
     return has(it=cutTbl, at=at, v=v, col=c,
                txt=f"{s} {eq} {v}", anti=f"{s} {ne} {v}")
+#Greedy
 
-# --- tree -----------------------------------------------------
+# --- tree -----------------------------------------------------
 def Tree(**d):
   return has(**dict(it=Tree, n=0, rows=[], cut=None,
                     ys=None, leafs=1) | d)
@@ -241,6 +256,7 @@ def growTree(tbl, y=None, acc=Num): # min-variance splits
           node.leafs = node.yes.leafs + node.no.leafs
     return node
   return recurse(tbl.rows)
+#Tree #Stop
 
 def leaf(tree, row): # walk row down to its leaf
   while tree.cut:
@@ -257,6 +273,7 @@ def guess(tree, tbl, row): # d2h of leaf row nearest to mids
     l.est = disty(tbl, min(some(l.rows, the.few),
                            key=lambda r: distx(tbl, r, c)))
   return l.est
+#JIT
 
 def nodes(tree, pre=None, txt=""): # walk: (node, indented txt)
   yield tree, (pre or "") + txt
@@ -264,6 +281,7 @@ def nodes(tree, pre=None, txt=""): # walk: (node, indented txt)
     sub = "" if pre is None else pre + "|  "
     yield from nodes(tree.yes, sub, tree.cut.txt)
     yield from nodes(tree.no,  sub, tree.cut.anti)
+#YieldFrom
 
 def showTree(tree, tbl): # y-col mids per node; +/- bad,best leaf
   ns    = list(nodes(tree))
@@ -278,11 +296,13 @@ def showTree(tree, tbl): # y-col mids per node; +/- bad,best leaf
           for n, txt in ns],
          "<>>" + ">"*len(tbl.cols.y))
 
-# --- misc -----------------------------------------------------
+# --- misc -----------------------------------------------------
 def shuffle(t): return sample(t, len(t)) # non-mutating
+#Functional
 
 def some(t, n): # n random picks from list t, no repeats
   return sample(t, min(n, len(t)))
+#Sample
 
 def o(v): # tidy: round floats; boxes --> dicts, no _keys
   if type(v) is float:
@@ -293,6 +313,7 @@ def o(v): # tidy: round floats; boxes --> dicts, no _keys
   return v
 
 def oo(x): print(o(x)); return x
+#Fluent
 
 def printm(rows, align=""): # align columns; flags "<->" per col
   rows = [[str(o(x)) for x in r] for r in rows]
@@ -301,6 +322,7 @@ def printm(rows, align=""): # align columns; flags "<->" per col
   for r in rows:
     print("  ".join(f"{x:{a}{w}}"
                    for x, a, w in zip(r, aligns, ws)).rstrip())
+#Pretty
 
 def wins(t, rows=None): # grader: row --> % of gap closed
   ys = sorted(disty(t, r) for r in rows or t.rows)
@@ -319,7 +341,7 @@ def holdout(t): # train: half, capped at lots. test: the rest
   return min(top[:the.check],
              key=lambda r: disty(tr, r)), rows[n:], tr
 
-# --- stats: are two samples of numbers the same? --------------
+# --- stats: are two samples of numbers the same? --------------
 def cohen(xs, ys, d=0.35): # mean gap small, in pooled sd units
   x, y = adds(xs), adds(ys)
   sd = (((x.n-1)*x.sd**2 + (y.n-1)*y.sd**2)/(x.n+y.n-2))**0.5
@@ -345,6 +367,7 @@ def ks(xs, ys, a=1.36): # sorted xs,ys: 95% kolmogorov-smirnov
 def same(xs, ys, ordered=False): # same, by all three tests
   if not ordered: xs, ys = sorted(xs), sorted(ys)
   return cliffs(xs, ys) and ks(xs, ys) and cohen(xs, ys)
+#Stats
 
 def ranks(d, reverse=False): # dict[str,rank]; rank 1 is best
   mu = lambda a: sum(a)/len(a)
@@ -355,12 +378,14 @@ def ranks(d, reverse=False): # dict[str,rank]; rank 1 is best
     if not same(anchor, v, True): rank += 1; anchor = v
     out[k] = rank
   return out
+#Ranks
 
-# --- demos ----------------------------------------------------
+# --- demos ----------------------------------------------------
 def test_list():
   "show the demos"
   for k, f in eg.items():
     print("%-12s %s" % (k, (f.__doc__ or "").strip()))
+#Demo
 
 def test_all():
   "run all the demos; exit 1 if any crash"
@@ -419,7 +444,7 @@ def test_cuts():
   s, at, v = min(cutsTbl(t, t.rows, lambda r: disty(t, r)))
   print(t.cols.names[at], "at", v, "score %.3f" % s)
 
-def errs(t, tr, tt, rows): # prediction errors, one holdout
+def errs(t, tr, tt, rows): # prediction errors, one holdout
   return ((abs(guess(tt, tr, r) - disty(tr, r))
            for r in rows))
 
@@ -432,6 +457,7 @@ def test_predict():
     tr = clone(t, rows[:n])
     adds(errs(t, tr, growTree(tr), rows[n:]), err)
   print("err mu %.3f sd %.3f" % (err.mu, err.sd))
+#Holdout
 
 def test_err():
   "20 moot sets, 20 repeats: err mu/sd, mean leaf count"
@@ -452,7 +478,7 @@ def test_err():
           (f.split("/")[-1][:22], len(t.rows), nleaf.mu,
            100*err.mu, 100*err.sd))
 
-def opt1(f): # one dataset: win of tree, rand, best picks
+def opt1(f): # one dataset: win of tree, rand, best picks
   t = adds(csv(f), Tbl())
   w = wins(t)
   ts, rs, bs = [], [], []
@@ -467,6 +493,7 @@ def test_err():
   print("%-22s %5s tree %4.0f rand %4.0f best %4.0f diff %4.0f"
         % (f.split("/")[-1][:22], len(t.rows),
            treat.mu, rand.mu, best.mu, d))
+#Baseline
 
 def test_opt():
   "optimize the 20 smallest moot data sets"
@@ -502,21 +529,23 @@ def test_klass():
                  for r in rows[n:])/(len(rows) - n))
   print("accuracy mu %.2f sd %.2f" % (acc.mu, acc.sd))
 
-# --- main -----------------------------------------------------
+# --- main -----------------------------------------------------
 eg = {"-" + k[5:]: f for k, f in globals().items()
       if k.startswith("test_")}
+#Reflect
 
 def run(f): # reseed, call f, catch crashes; 1 if crashed
   seed(the.seed)
   try: f()
   except Exception: traceback.print_exc(); return 1
   return 0
+#Seed
 
 def runs():
   errs = 0
-  for j, s in enumerate(sys.argv): 
+  for j, s in enumerate(sys.argv):
     if s=="-h": print(__doc__)
-    if f := eg.get("-" + s.lstrip("-")): 
+    if f := eg.get("-" + s.lstrip("-")):
       errs += run(f)
     elif hasattr(the, k := s.lstrip("-")):
       setattr(the, k, atom(sys.argv[j + 1]))
